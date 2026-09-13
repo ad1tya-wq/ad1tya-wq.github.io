@@ -1,13 +1,26 @@
 ---
 import { getCollection } from 'astro:content';
+import { iconPath } from '../lib/picto';
+
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+const repoPath = (url: string) => url.replace(/^https?:\/\/github\.com\//, '').split('/').slice(0, 2).join('/');
+const pad = (n: number) => String(n).padStart(2, '0');
+const first = projects[0]!;
 ---
 <section id="projects" class="section" data-chapter="projects" aria-labelledby="projects-h">
   <div class="col">
     <h2 id="projects-h">Projects</h2>
     <ul class="rows" data-projects>
       {projects.map((p, i) => (
-        <li class="row" data-fragment={i} data-reveal>
+        <li
+          class="row"
+          data-fragment={i}
+          data-reveal
+          data-picto={iconPath(p.data.icon)}
+          data-repo={repoPath(p.data.repo)}
+          data-stack={p.data.stack.slice(0, 2).join(' / ')}
+          data-year={p.data.year ?? ''}
+        >
           <a class="row__link" href={p.data.url ?? p.data.repo} rel="noopener">
             <span class="row__title">{p.data.title}</span>
             <span class="row__arrow" aria-hidden="true">↗</span>
@@ -18,6 +31,17 @@ const projects = (await getCollection('projects')).sort((a, b) => a.data.order -
       ))}
     </ul>
   </div>
+
+  <!-- desktop only: the active project's ejecta forms its pictogram in the slot; the readout repeats row facts in mono -->
+  <aside class="readout" aria-hidden="true" data-readout>
+    <div class="readout__slot" data-picto-slot></div>
+    <dl class="readout__facts mono">
+      <div class="readout__fact"><dt>index</dt><dd data-readout-index>{pad(1)} / {pad(projects.length)}</dd></div>
+      <div class="readout__fact"><dt>repo</dt><dd><span data-readout-owner>{repoPath(first.data.repo).split('/')[0]}/</span><wbr /><span data-readout-name>{repoPath(first.data.repo).split('/')[1]}</span></dd></div>
+      <div class="readout__fact"><dt>stack</dt><dd data-readout-stack>{first.data.stack.slice(0, 2).join(' / ')}</dd></div>
+      <div class="readout__fact" data-readout-year-row hidden={!first.data.year}><dt>year</dt><dd data-readout-year>{first.data.year ?? ''}</dd></div>
+    </dl>
+  </aside>
 </section>
 
 <style>
@@ -50,4 +74,30 @@ const projects = (await getCollection('projects')).sort((a, b) => a.data.order -
   .row:hover .row__arrow, .row:focus-within .row__arrow { opacity: 1; transform: none; }
   .row__summary { margin-top: var(--s-1); max-width: var(--measure); }
   .row__stack { margin-top: var(--s-1); font-size: var(--fs-mono-sm); }
+
+  .readout { display: none; }
+
+  @media (min-width: 1024px) {
+    #projects {
+      display: grid;
+      grid-template-columns: minmax(0, 600px) minmax(0, 1fr);
+      column-gap: var(--s-5);
+    }
+    #projects > .col { width: 100%; } /* the grid track, not the global 46 %, sets the column here */
+    .readout {
+      display: block;
+      position: sticky;
+      top: 50vh;
+      align-self: start;
+      translate: 0 -50%;
+      justify-self: center;
+      width: 320px;
+    }
+    .readout__slot { width: 220px; height: 220px; margin-inline: auto; }
+    .readout__facts { display: grid; gap: var(--s-1); margin-top: var(--s-3); font-size: var(--fs-mono-sm); color: var(--fog); }
+    .readout__fact { display: grid; grid-template-columns: 6ch 1fr; gap: var(--s-2); }
+    .readout__fact dd { color: var(--silver); overflow-wrap: break-word; }
+    .readout__fact dd { transition: opacity 160ms var(--ease-out), translate 160ms var(--ease-out); }
+    .readout.is-switching .readout__fact dd { opacity: 0; translate: 0 -3px; }
+  }
 </style>

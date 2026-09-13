@@ -1,7 +1,7 @@
 import { attribute, createFbo, createProgramDeferred, uniforms } from './gl';
 import { computeAnchor, particleCount, textRectOf } from './layout';
 import { damp, holeRadiusPx, lerp, smoothstep } from './lifecycle';
-import { generateParticles, type ParticleBuffers } from './particles';
+import { generateParticles, SHIP_COUNT, type ParticleBuffers } from './particles';
 import type { FieldState } from './state';
 import { hidePoster, showPoster } from './fallback';
 import pointsVert from './shaders/points.vert.glsl?raw';
@@ -15,9 +15,16 @@ void main() {
   gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
 }`;
 
+/** particles per project that can form its pictogram */
+export const PICTO_SLOTS = 2400;
+
 export interface Field {
   readonly nameSlots: number;
   readonly faceSlots: number;
+  readonly pictoSlots: number;
+  /** points (0..1 in the pictogram box) for one project's cluster */
+  setPictoPoints(fragment: number, pts: Float32Array): void;
+  setPictoBox(x: number, y: number, w: number, h: number): void;
   setFacePoints(pts: Float32Array): void;
   setFaceBox(x: number, y: number, w: number, h: number): void;
   setNamePoints(pts: Float32Array): void;
@@ -32,7 +39,7 @@ export interface FieldOptions {
   projectCount: number;
 }
 
-const POINT_UNIFORMS = ['uResolution', 'uDpr', 'uProgress', 'uTime', 'uAnchor', 'uRadius', 'uNameBox', 'uNameMix', 'uFaceBox', 'uFaceMix', 'uFaceReveal', 'uPointer', 'uPointerForce', 'uHover', 'uHoverY', 'uDiskScale', 'uGain'] as const;
+const POINT_UNIFORMS = ['uResolution', 'uDpr', 'uProgress', 'uTime', 'uAnchor', 'uRadius', 'uNameBox', 'uNameMix', 'uFaceBox', 'uFaceMix', 'uFaceReveal', 'uActiveFragment', 'uPictoBox', 'uPictoMix', 'uPointer', 'uPointerForce', 'uHover', 'uHoverY', 'uDiskScale', 'uGain'] as const;
 const COMPOSITE_UNIFORMS = ['uScene', 'uResolution', 'uDpr', 'uHole', 'uRsPx', 'uTextRect', 'uExposure'] as const;
 
 /** Creates the field and rebuilds it transparently if the WebGL context is lost and later restored. */
@@ -46,6 +53,8 @@ export function createField(canvas: HTMLCanvasElement, opts: FieldOptions): Fiel
   let lastBox: [number, number, number, number] | null = null;
   let lastColumn: Element | null = null;
   let lastProbe: Float32Array | null = null;
+  const lastPicto = new Map<number, Float32Array>();
+  let lastPictoBox: [number, number, number, number] | null = null;
   const onRestored = () => {
     inner?.destroy();
     inner = createRenderer(canvas, opts);
@@ -57,11 +66,23 @@ export function createField(canvas: HTMLCanvasElement, opts: FieldOptions): Fiel
     if (lastBox) inner.setNameBox(...lastBox);
     inner.setChapterColumn(lastColumn);
     inner.setProbe(lastProbe);
+    const restored = inner;
+    lastPicto.forEach((pts, f) => restored.setPictoPoints(f, pts));
+    if (lastPictoBox) inner.setPictoBox(...lastPictoBox);
   };
   canvas.addEventListener('webglcontextrestored', onRestored);
   return {
     nameSlots: inner.nameSlots,
     faceSlots: inner.faceSlots,
+    pictoSlots: inner.pictoSlots,
+    setPictoPoints(f, pts) {
+      lastPicto.set(f, pts);
+      inner?.setPictoPoints(f, pts);
+    },
+    setPictoBox(x, y, w, h) {
+      lastPictoBox = [x, y, w, h];
+      inner?.setPictoBox(x, y, w, h);
+    },
     setFacePoints(pts) {
       lastFace = pts;
       inner?.setFacePoints(pts);
@@ -136,6 +157,25 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
   const faceData = new Float32Array(2 * count).fill(-1);
   let faceBuf: WebGLBuffer | null = null;
   let faceBox: [number, number, number, number] = [0, 0, 0, 0];
+  const pictoData = new Float32Array(2 * count).fill(-1);
+  let pictoBuf: WebGLBuffer | null = null;
+  let pictoBox: [number, number, number, number] = [0, 0, 0, 0];
+  /** particle indices per project that may form its pictogram (built once the buffers arrive) */
+  const pictoIndex = new Map<number, Uint32Array>();
+  const pendingPicto = new Map<number, Float32Array>();
+
+  function uploadPicto(fragment: number, pts: Float32Array) {
+    const idx = pictoIndex.get(fragment);
+    if (!idx) return;
+    const n = Math.min(idx.length, pts.length / 2);
+    for (let k = 0; k < n; k++) {
+      pictoData[2 * idx[k]!] = pts[2 * k]!;
+      pictoData[2 * idx[k]! + 1] = pts[2 * k + 1]!;
+    }
+    if (!pictoBuf) return;
+    gl.bindBuffer(gl.ARRAY_BUFFER, pictoBuf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, pictoData);
+  }
 
   function uploadName(pts: Float32Array) {
     const n = Math.min(pts.length, 2 * nameSlots);
@@ -171,11 +211,23 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
     attribute(gl, pointsProg, 'aShip', p.ship, 3);
     nameBuf = attribute(gl, pointsProg, 'aName', nameData, 2, gl.DYNAMIC_DRAW);
     faceBuf = attribute(gl, pointsProg, 'aFace', faceData, 2, gl.DYNAMIC_DRAW);
+    pictoBuf = attribute(gl, pointsProg, 'aPicto', pictoData, 2, gl.DYNAMIC_DRAW);
     gl.bindVertexArray(null);
+    // the first PICTO_SLOTS non-ship particles of each project's ejecta sector can form its pictogram
+    const perFragment = new Map<number, number[]>();
+    for (let i = SHIP_COUNT; i < p.count; i++) {
+      const f = p.fragment[i]!;
+      let list = perFragment.get(f);
+      if (!list) perFragment.set(f, (list = []));
+      if (list.length < PICTO_SLOTS) list.push(i);
+    }
+    perFragment.forEach((list, f) => pictoIndex.set(f, Uint32Array.from(list)));
     if (pendingName) uploadName(pendingName);
     pendingName = null;
     if (pendingFace) uploadFace(pendingFace);
     pendingFace = null;
+    pendingPicto.forEach((pts, f) => uploadPicto(f, pts));
+    pendingPicto.clear();
   }
 
   // generate off the main thread; fall back to inline generation if workers are unavailable
@@ -251,6 +303,9 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
     gl.uniform4f(pu.uFaceBox, faceBox[0], faceBox[1] - window.scrollY, faceBox[2], faceBox[3]);
     gl.uniform1f(pu.uFaceMix, state.faceMix);
     gl.uniform1f(pu.uFaceReveal, state.faceReveal);
+    gl.uniform1f(pu.uActiveFragment, state.activeFragment);
+    gl.uniform4f(pu.uPictoBox, pictoBox[0], pictoBox[1], pictoBox[2], pictoBox[3]);
+    gl.uniform1f(pu.uPictoMix, state.pictoMix);
     gl.uniform2f(pu.uPointer, state.pointerX, state.pointerY);
     gl.uniform1f(pu.uPointerForce, state.force);
     gl.uniform1f(pu.uHover, state.hover);
@@ -308,7 +363,7 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
     }
 
     state.progress = state.reducedMotion ? state.target : damp(state.progress, state.target, 8, dt);
-    const moving = Math.abs(state.target - state.progress) > 1e-4 || state.force !== 0 || state.hover >= 0 || state.nameMix > 0 && state.nameMix < 1 || probe !== null;
+    const moving = Math.abs(state.target - state.progress) > 1e-4 || state.force !== 0 || state.hover >= 0 || (state.pictoMix > 0 && state.pictoMix < 1) || (state.nameMix > 0 && state.nameMix < 1) || probe !== null;
     if (moving) idleSince = now;
 
     // adaptive resolution: three slow frames in a row while moving -> step the DPR down
@@ -339,6 +394,17 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
   return {
     nameSlots,
     faceSlots,
+    pictoSlots: PICTO_SLOTS,
+    setPictoPoints(fragment, pts) {
+      if (!particles) {
+        pendingPicto.set(fragment, pts);
+        return;
+      }
+      uploadPicto(fragment, pts);
+    },
+    setPictoBox(x, y, w, h) {
+      pictoBox = [x, y, w, h]; // viewport css px: the slot is sticky, so no scroll offset
+    },
     setFacePoints(pts) {
       if (!particles) {
         pendingFace = pts;

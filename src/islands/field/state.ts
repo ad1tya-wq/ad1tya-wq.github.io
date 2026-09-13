@@ -17,6 +17,10 @@ export interface FieldState {
   hover: number;
   /** viewport y (css px) of the hovered row */
   hoverY: number;
+  /** project whose ejecta cluster currently forms its pictogram, or -1 */
+  activeFragment: number;
+  /** pictogram assembly 0..1 (tweened when the active project changes) */
+  pictoMix: number;
   /** true while a mode toggle overrides scroll */
   detached: boolean;
   reducedMotion: boolean;
@@ -36,6 +40,8 @@ export function createState(reducedMotion: boolean): FieldState {
     force: 0,
     hover: -1,
     hoverY: 0,
+    activeFragment: -1,
+    pictoMix: 0,
     detached: false,
     reducedMotion,
     textRect: [0, 0, 0, 0],

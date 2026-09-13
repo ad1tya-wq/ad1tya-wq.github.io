@@ -91,3 +91,17 @@ export function sampleName(el: HTMLElement, count: number): { points: Float32Arr
   for (let i = 0; i < mask.length; i++) mask[i] = data[4 * i + 3]! > 128 ? 1 : 0;
   return { points: pickPoints(mask, w, h, count, mulberry32(99)), box };
 }
+
+/** Samples the filled area of an SVG path (256-unit viewBox) drawn at `size` css px; points are 0..1 in that square. */
+export function samplePath(d: string, count: number, size = 160, viewBox = 256): Float32Array | null {
+  const cv = document.createElement('canvas');
+  cv.width = size;
+  cv.height = size;
+  const ctx = cv.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return null;
+  ctx.scale(size / viewBox, size / viewBox);
+  ctx.fillStyle = '#fff';
+  ctx.fill(new Path2D(d));
+  const mask = maskFromRGBA(ctx.getImageData(0, 0, size, size).data, size, size);
+  return pickPoints(mask, size, size, count, mulberry32(11));
+}

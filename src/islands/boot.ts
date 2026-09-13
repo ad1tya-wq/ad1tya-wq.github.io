@@ -2,7 +2,7 @@ import { createField } from './field';
 import { createState } from './field/state';
 import { mountScroll } from './field/scroll';
 import { mountTopNav } from './nav/topNav';
-import { mountProjectsHover } from './projectsHover';
+import { mountProjectsActive } from './projectsActive';
 import { mountReveals } from './reveals';
 import { mountHero } from './hero';
 import { mountPointer } from './pointer';
@@ -30,7 +30,7 @@ export const scroll = mountScroll({
 mountHero({ state, field });
 export const pointer = mountPointer({ state });
 mountToy({ state, field, pointer, reducedMotion });
-mountProjectsHover({ state });
+mountProjectsActive({ state, field });
 mountReveals({ reducedMotion });
 
 // ScrollTrigger measures once fonts and images are in

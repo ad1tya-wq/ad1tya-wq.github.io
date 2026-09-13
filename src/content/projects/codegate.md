@@ -4,5 +4,6 @@ summary: A certified gate that escalates AI-generated code to an LLM only when i
 stack: [Python, Conformal risk control, Static analysis]
 repo: https://github.com/ad1tya-wq/codegate
 url: https://github.com/ad1tya-wq/codegate-scanner
+icon: shield-check
 order: 1
 ---

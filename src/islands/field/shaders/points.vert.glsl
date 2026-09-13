@@ -9,6 +9,7 @@ in vec4 aDisk;      // x radius in r_s (3..12), y phase, z vertical jitter, w 1 
 in float aFragment; // project index
 in vec2 aFace;      // 0..1 inside the portrait box, or (-1,-1) when unassigned
 in vec3 aShip;      // ship-local x, y; z = 0 hull, (0,1] exhaust age, -1 not on the ship
+in vec2 aPicto;     // 0..1 inside the pictogram box for the particle's project, or (-1,-1)
 
 uniform vec2 uResolution;   // css px
 uniform float uDpr;
@@ -21,6 +22,9 @@ uniform float uNameMix;     // load-time assembly 0..1
 uniform vec4 uFaceBox;      // x y w h of the portrait, css px
 uniform float uFaceMix;     // 1 once portrait points exist
 uniform float uFaceReveal;  // face particle brightness (dips while the photo shows)
+uniform float uActiveFragment; // project whose cluster forms its pictogram, or -1
+uniform vec4 uPictoBox;     // x y w h of the pictogram slot, css px (viewport)
+uniform float uPictoMix;    // pictogram assembly 0..1
 uniform vec2 uPointer;      // css px
 uniform float uPointerForce;// >0 repel, <0 attract
 uniform float uHover;       // hovered fragment or -1
@@ -115,6 +119,13 @@ void main() {
   float isHover = step(0.5, 1.0 - abs(aFragment - uHover)) * step(0.0, uHover) * wEject * (1.0 - wRem);
   px = mix(px, vec2(uAnchor.x, uHoverY), 0.15 * isHover);
 
+  // ---- the active project's ejecta cluster gathers into its pictogram beside the rows ----
+  float hasPicto = step(0.0, aPicto.x);
+  float isActive = step(0.5, 1.0 - abs(aFragment - uActiveFragment)) * step(0.0, uActiveFragment);
+  float pictoW = hasPicto * isActive * uPictoMix * wEject * (1.0 - wRem);
+  vec2 pictoPx = uPictoBox.xy + aPicto * uPictoBox.zw;
+  px = mix(px, pictoPx, pictoW);
+
   // ---- spacecraft flyby during Projects and Skills: a gravity assist under the remnant ----
   float isShip = step(-0.5, aShip.z);
   float wShip = ss(0.28, 0.31, p) * (1.0 - ss(0.65, 0.68, p));
@@ -154,6 +165,7 @@ void main() {
   b = mix(b, 0.9, nameW);
   b = mix(b, 1.0 * uFaceReveal, faceW);
   b *= mix(1.0, 2.0, isHover);
+  b = mix(b, 1.5, pictoW);
   float bShip = mix(1.1, 0.9 * (1.0 - aShip.z) * flicker, step(0.001, aShip.z));
   b = mix(b, bShip, shipW);
 
@@ -164,6 +176,7 @@ void main() {
 
   float size = 1.4 + 1.2 * wBreak * (1.0 - ss(0.20, 0.26, p)) + 0.5 * wEject * (1.0 - wFall) + 0.6 * falls * wHole;
   size = mix(size, 1.6, faceW);
+  size = mix(size, 1.7, pictoW);
   size = mix(size, 1.7 - 0.5 * aShip.z, shipW);
 
   vec2 clip = (px / uResolution) * 2.0 - 1.0;

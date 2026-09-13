@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@phosphor-icons/core": "^2.1.1",
     "@types/node": "^22.20.2",
     "sharp": "^0.35.4",
     "tsx": "^4.23.0",

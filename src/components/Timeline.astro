@@ -5,6 +5,8 @@ export interface Entry {
   title: string;
   summary: string;
   link?: { href: string; label: string };
+  /** a figure that belongs to the entry (a grade): shown on the right, labelled */
+  score?: { label: string; value: string };
 }
 interface Props {
   entries: Entry[];
@@ -17,9 +19,15 @@ const { entries } = Astro.props;
   </svg>
   <ul class="entries">
     {entries.map((e) => (
-      <li class="entry" data-reveal>
+      <li class:list={['entry', { 'entry--scored': !!e.score }]} data-reveal>
         <p class="entry__dates mono">{e.dates}</p>
         <p class="entry__title">{e.title}</p>
+        {e.score && (
+          <p class="entry__score">
+            <span class="entry__score-label mono">{e.score.label}</span>
+            <span class="entry__score-value">{e.score.value}</span>
+          </p>
+        )}
         <p class="entry__summary">{e.summary}</p>
         {e.link && (
           <a class="link entry__link" href={e.link.href} rel="noopener" target="_blank">{e.link.label} <span aria-hidden="true">↗</span></a>
@@ -36,5 +44,30 @@ const { entries } = Astro.props;
   .entry__dates { font-size: var(--fs-mono-sm); }
   .entry__title { margin-top: var(--s-1); font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; color: var(--core); }
   .entry__summary { margin-top: var(--s-1); max-width: var(--measure); }
+  /* scored entries: the grade sits on the right, on the title's baseline, with its own label */
+  .entry--scored {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--s-3);
+    align-items: end;
+  }
+  .entry--scored > :not(.entry__score) { grid-column: 1; }
+  .entry__score {
+    grid-column: 2;
+    grid-row: 2;
+    display: grid;
+    justify-items: end;
+    margin-top: var(--s-1);
+    text-align: right;
+  }
+  .entry__score-label { font-size: var(--fs-mono-sm); color: var(--fog); }
+  .entry__score-value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.25rem;
+    line-height: 1.2;
+    color: var(--core);
+    font-variant-numeric: tabular-nums;
+  }
   .entry__link { display: inline-block; margin-top: var(--s-2); font-family: var(--font-mono); font-size: var(--fs-mono-sm); letter-spacing: 0.06em; }
 </style>

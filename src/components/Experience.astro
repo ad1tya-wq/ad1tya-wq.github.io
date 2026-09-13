@@ -16,7 +16,8 @@ const education: Entry[] = (await getCollection('education'))
   .map((e) => ({
     dates: `${e.data.start} to ${e.data.end}`,
     title: e.data.degree,
-    summary: `${e.data.institution}. ${e.data.score}.`,
+    summary: e.data.institution,
+    score: e.data.score,
   }));
 ---
 <!-- one chapter, two timelines: the field's fallback phase runs across both -->

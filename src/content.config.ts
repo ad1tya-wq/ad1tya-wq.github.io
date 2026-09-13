@@ -1,3 +1,4 @@
+import { PICTO_ICONS } from './lib/picto';
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
@@ -10,6 +11,9 @@ const projects = defineCollection({
     stack: z.array(z.string()).min(1),
     repo: z.url(),
     url: z.url().optional(),
+    /** Phosphor regular icon name: the particle pictogram for this project */
+    icon: z.enum(PICTO_ICONS),
+    year: z.string().optional(),
     order: z.number().int(),
   }),
 });
@@ -34,7 +38,8 @@ const education = defineCollection({
     institution: z.string(),
     start: z.string(),
     end: z.string(),
-    score: z.string(),
+    /** label is what the number is (CGPA, percentage); value is the number as it should read */
+    score: z.object({ label: z.string(), value: z.string() }),
     order: z.number().int(),
   }),
 });
