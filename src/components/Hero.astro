@@ -1,0 +1,44 @@
+---
+import { site } from '../content/site';
+---
+<section id="top" class="section hero" data-chapter="top" aria-labelledby="hero-name">
+  <div class="col hero__col">
+    <h1 id="hero-name" class="hero__name" data-name>{site.name}</h1>
+    <p class="hero__title mono">{site.title}</p>
+    <p class="hero__line">{site.line}</p>
+    <a class="link" href="#projects">Projects</a>
+  </div>
+  <div class="hero__portrait">
+    <slot name="portrait" />
+  </div>
+</section>
+
+<style>
+  .hero {
+    min-height: 100dvh;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    padding-top: calc(var(--s-6) + 44px);
+  }
+  .hero__col { width: min(100%, 720px); }
+  .hero__name {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: var(--fs-name);
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    color: var(--core);
+    text-wrap: balance;
+    transition: opacity 400ms var(--ease-out);
+  }
+  .hero__name.is-assembled { opacity: 0; }
+  .hero__title { margin-top: var(--s-3); font-size: var(--fs-mono); }
+  .hero__line { margin-top: var(--s-2); max-width: 44ch; }
+  .hero__col > .link { display: inline-block; margin-top: var(--s-4); }
+  .hero__portrait { align-self: start; margin-top: var(--s-3); }
+  @media (max-width: 767px) {
+    .hero { grid-template-columns: 1fr; align-content: start; row-gap: var(--s-4); }
+    .hero__portrait { order: -1; width: 120px; }
+  }
+</style>

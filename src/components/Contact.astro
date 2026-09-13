@@ -1,0 +1,26 @@
+---
+import { site } from '../content/site';
+const year = new Date().getFullYear();
+---
+<section id="contact" class="section contact" data-chapter="contact" aria-labelledby="contact-h">
+  <div class="col col--center" data-reveal>
+    <h2 id="contact-h">Contact</h2>
+    <p>If any of this is useful to what you are building, write to me.</p>
+    <div class="contact__actions">
+      <a class="btn btn--primary" href={`mailto:${site.email}`}>Email me</a>
+      <a class="btn" href={site.resume} download>Download resume</a>
+    </div>
+    <p class="contact__links">
+      <a class="link" href={site.github} rel="me noopener">GitHub</a>
+      <a class="link" href={site.linkedin} rel="me noopener">LinkedIn</a>
+    </p>
+  </div>
+  <footer class="footer mono">{site.name}, {year}</footer>
+</section>
+
+<style>
+  .contact { min-height: 100dvh; display: grid; align-content: center; }
+  .contact__actions { display: flex; gap: var(--s-2); justify-content: center; margin-top: var(--s-4); flex-wrap: wrap; }
+  .contact__links { display: flex; gap: var(--s-3); justify-content: center; margin-top: var(--s-4); }
+  .footer { position: absolute; left: var(--gutter); bottom: var(--s-3); font-size: var(--fs-mono-sm); }
+</style>

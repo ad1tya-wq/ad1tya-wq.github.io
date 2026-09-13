@@ -1,0 +1,32 @@
+---
+import { getCollection } from 'astro:content';
+const items = (await getCollection('experience')).sort((a, b) => a.data.order - b.data.order);
+---
+<section id="experience" class="section" data-chapter="experience" aria-labelledby="experience-h">
+  <div class="col">
+    <h2 id="experience-h">Experience</h2>
+    <div class="timeline">
+      <svg class="spiral" viewBox="0 0 100 400" preserveAspectRatio="none" aria-hidden="true" data-spiral>
+        <path d="M 2 0 C 2 140, 2 220, 20 300 S 80 380, 100 400" fill="none" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" />
+      </svg>
+      <ul class="entries">
+        {items.map((e) => (
+          <li class="entry" data-reveal>
+            <p class="entry__dates mono">{e.data.start} to {e.data.end ?? 'present'}</p>
+            <p class="entry__role">{e.data.role}, {e.data.org}</p>
+            <p class="entry__summary">{e.data.summary}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  .timeline { position: relative; padding-left: var(--s-4); }
+  .spiral { position: absolute; top: 0; left: 0; width: 100%; height: 100%; color: var(--fog); overflow: visible; }
+  .entries { display: grid; gap: var(--s-5); }
+  .entry__dates { font-size: var(--fs-mono-sm); }
+  .entry__role { margin-top: var(--s-1); font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; color: var(--core); }
+  .entry__summary { margin-top: var(--s-1); max-width: var(--measure); }
+</style>

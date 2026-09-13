@@ -1,0 +1,15 @@
+<section id="horizon" class="section horizon" data-chapter="horizon" aria-labelledby="horizon-h">
+  <div class="col col--center" data-toy>
+    <h2 id="horizon-h">Horizon</h2>
+    <p class="horizon__caption">Launch a probe and let gravity decide: escape, orbit, or capture. Drag anywhere to aim.</p>
+    <button type="button" class="btn" data-toy-launch>Launch a probe</button>
+    <p class="horizon__status mono" aria-live="polite" data-toy-status></p>
+  </div>
+</section>
+
+<style>
+  .horizon { min-height: 100dvh; display: grid; align-content: end; padding-bottom: var(--s-6); }
+  .horizon__caption { max-width: 44ch; margin-inline: auto; }
+  .horizon .btn { margin-top: var(--s-4); }
+  .horizon__status { min-height: 1.5em; margin-top: var(--s-2); font-size: var(--fs-mono-sm); }
+</style>

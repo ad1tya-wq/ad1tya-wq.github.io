@@ -1,0 +1,13 @@
+{
+  "bands": [
+    { "name": "Languages", "items": ["Python", "TypeScript", "Java", "Kotlin", "SQL"] },
+    { "name": "Frameworks", "items": ["LangGraph", "React", "Astro", "Android"] },
+    { "name": "Data and ML", "items": ["scikit-learn", "Prophet", "Conformal prediction", "RAG"] },
+    { "name": "Tools", "items": ["Docker", "Jenkins", "Ansible", "Git", "Grafana"] }
+  ],
+  "soft": [
+    "I write down the failure modes before I write the code.",
+    "I would rather ship a small, proven thing than a large, promised one.",
+    "I explain trade-offs in plain language to the people who will live with them."
+  ]
+}

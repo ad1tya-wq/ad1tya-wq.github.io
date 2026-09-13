@@ -1,13 +1,20 @@
 ---
 import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import About from '../components/About.astro';
+import Projects from '../components/Projects.astro';
+import Skills from '../components/Skills.astro';
+import Experience from '../components/Experience.astro';
+import Horizon from '../components/Horizon.astro';
+import Contact from '../components/Contact.astro';
 import { site } from '../content/site';
 ---
 <Base title={`${site.name}, ${site.title}`} description={site.line}>
-  <section id="top" class="section" data-chapter="top"><div class="col"><h1>{site.name}</h1></div></section>
-  <section id="about" class="section" data-chapter="about"><div class="col"><h2>About</h2></div></section>
-  <section id="projects" class="section" data-chapter="projects"><div class="col"><h2>Projects</h2></div></section>
-  <section id="skills" class="section" data-chapter="skills"><div class="col"><h2>Skills</h2></div></section>
-  <section id="experience" class="section" data-chapter="experience"><div class="col"><h2>Experience</h2></div></section>
-  <section id="horizon" class="section" data-chapter="horizon"><div class="col col--center"><h2>Horizon</h2></div></section>
-  <section id="contact" class="section" data-chapter="contact"><div class="col col--center"><h2>Contact</h2></div></section>
+  <Hero />
+  <About />
+  <Projects />
+  <Skills />
+  <Experience />
+  <Horizon />
+  <Contact />
 </Base>
