@@ -4,6 +4,9 @@ import { mountScroll } from './field/scroll';
 import { mountTopNav } from './nav/topNav';
 import { mountProjectsHover } from './projectsHover';
 import { mountReveals } from './reveals';
+import { mountHero } from './hero';
+import { mountModes } from './modes';
+import { mountPointer } from './pointer';
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const canvas = document.getElementById('field') as HTMLCanvasElement | null;
@@ -24,6 +27,9 @@ export const scroll = mountScroll({
   },
 });
 
+mountHero({ state, field });
+export const modes = mountModes({ state, reducedMotion });
+export const pointer = mountPointer({ state });
 mountProjectsHover({ state });
 mountReveals({ reducedMotion });
 
