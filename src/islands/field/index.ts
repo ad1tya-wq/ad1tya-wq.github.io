@@ -1,5 +1,5 @@
 import { attribute, createFbo, createProgramDeferred, uniforms } from './gl';
-import { computeAnchor, particleCount, textRectOf } from './layout';
+import { computeAnchor, particleCount, SLOTS, textRectOf } from './layout';
 import { damp, holeRadiusPx, lerp, massScale, smoothstep } from './lifecycle';
 import { generateParticles, SHIP_COUNT, type ParticleBuffers } from './particles';
 import type { FieldState } from './state';
@@ -152,9 +152,9 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
   let vw = window.innerWidth;
   let vh = window.innerHeight;
   const count = particleCount(vw, vh, lowEnd);
-  const nameSlots = Math.round(0.42 * count); // same rules as generateParticles, known before the buffers arrive
-  const faceSlots = Math.round(0.38 * count);
-  const eatSlots = Math.round(0.2 * count); // the last 20 %: ordinary particles until the hole eats text
+  const nameSlots = Math.round(SLOTS.name * count); // same rules as generateParticles, known before the buffers arrive
+  const faceSlots = Math.round(SLOTS.face * count);
+  const eatSlots = Math.round(SLOTS.eat * count); // the last 15 %: ordinary particles until the hole eats text; the star keeps its own
   const eatOffset = count - eatSlots;
   let particles: ParticleBuffers | null = null;
   let pendingName: Float32Array | null = null;

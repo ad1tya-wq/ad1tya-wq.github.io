@@ -16,9 +16,9 @@ describe('computeAnchor', () => {
 
 describe('particleCount', () => {
   it('clamps to [20k, 80k] and scales down on low-end devices', () => {
-    expect(particleCount(1440, 900, false)).toBe(64800);
-    expect(particleCount(390, 844, false)).toBe(20000);
-    expect(particleCount(3840, 2160, false)).toBe(80000);
-    expect(particleCount(1440, 900, true)).toBe(25920);
+    expect(particleCount(1440, 900, false)).toBe(77760);
+    expect(particleCount(390, 844, false)).toBe(24000);
+    expect(particleCount(3840, 2160, false)).toBe(96000);
+    expect(particleCount(1440, 900, true)).toBe(31104);
   });
 });
