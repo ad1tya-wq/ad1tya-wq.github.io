@@ -27,6 +27,8 @@ const projects = (await getCollection('projects')).sort((a, b) => a.data.order -
     display: flex;
     align-items: baseline;
     gap: var(--s-2);
+    padding-block: 7px;
+    margin-block: -7px;
     text-decoration: none;
     color: var(--core);
   }

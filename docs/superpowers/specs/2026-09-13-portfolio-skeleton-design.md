@@ -19,7 +19,7 @@ Design read: personal portfolio for recruiters and peers; Madhav-lineage single-
 |---|---|---|
 | `--graphite` | `#151617` | page surface (warm off-black; never `#000`) |
 | `--smoke` | `#1F2123` | rare raised surface (toggle track, code) |
-| `--fog` | `#7E8388` | secondary text, hairlines at 40% (4.9:1 on graphite) |
+| `--fog` | `#858A8F` | secondary text, hairlines at 40% (5.3:1 on graphite, 4.8:1 on smoke; raised from #7E8388 in the contrast audit) |
 | `--silver` | `#CBCED1` | body text (11.7:1 on graphite) |
 | `--core` | `#F3F2ED` | star core, primary button fill, hover inversions |
 

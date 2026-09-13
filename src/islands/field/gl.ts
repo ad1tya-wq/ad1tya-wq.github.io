@@ -19,6 +19,37 @@ export function createProgram(gl: WebGL2RenderingContext, vs: string, fs: string
   return p;
 }
 
+/**
+ * Links without blocking: with KHR_parallel_shader_compile the driver compiles on background threads and
+ * `ready()` polls COMPLETION_STATUS; without it, the first `ready()` call performs the (synchronous) link check.
+ */
+export function createProgramDeferred(gl: WebGL2RenderingContext, vs: string, fs: string): { program: WebGLProgram; ready(): boolean } {
+  const ext = gl.getExtension('KHR_parallel_shader_compile') as { COMPLETION_STATUS_KHR: number } | null;
+  const program = gl.createProgram()!;
+  const v = gl.createShader(gl.VERTEX_SHADER)!;
+  const f = gl.createShader(gl.FRAGMENT_SHADER)!;
+  gl.shaderSource(v, vs);
+  gl.shaderSource(f, fs);
+  gl.compileShader(v);
+  gl.compileShader(f);
+  gl.attachShader(program, v);
+  gl.attachShader(program, f);
+  gl.linkProgram(program);
+  let verified = false;
+  return {
+    program,
+    ready() {
+      if (verified) return true;
+      if (ext && !gl.getProgramParameter(program, ext.COMPLETION_STATUS_KHR)) return false;
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        throw new Error(`program link failed: ${gl.getProgramInfoLog(program)} / ${gl.getShaderInfoLog(v)} / ${gl.getShaderInfoLog(f)}`);
+      }
+      verified = true;
+      return true;
+    },
+  };
+}
+
 export type Uniforms<K extends string> = Record<K, WebGLUniformLocation | null>;
 
 export function uniforms<K extends string>(gl: WebGL2RenderingContext, p: WebGLProgram, names: readonly K[]): Uniforms<K> {

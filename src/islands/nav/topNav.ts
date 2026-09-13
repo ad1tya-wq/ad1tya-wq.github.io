@@ -27,20 +27,24 @@ export function mountTopNav({ reducedMotion }: { reducedMotion: boolean }): TopN
   let collapseTimer = 0;
 
   const isMobile = () => window.matchMedia('(max-width: 767px)').matches;
-  const originX = () => nav!.getBoundingClientRect().left + nav!.clientLeft;
 
   // ---- indicator: FLIP with a slight stretch at mid-slide ----
+  // Layout metrics (offsetLeft/offsetWidth) are used instead of getBoundingClientRect so that
+  // measurements stay correct while the pill itself is mid-animation (transforms do not affect them).
+  let indX = 0;
+  let indW = 0;
   function moveIndicator(to: HTMLAnchorElement, animate: boolean) {
-    const from = indicator!.getBoundingClientRect();
-    const rect = to.getBoundingClientRect();
-    const hadWidth = from.width > 0;
-    const finalX = rect.left - originX();
-    indicator!.style.width = `${rect.width}px`;
+    const fromX = indX;
+    const fromW = indW;
+    const finalX = to.offsetLeft;
+    const finalW = to.offsetWidth;
+    indX = finalX;
+    indW = finalW;
+    indicator!.style.width = `${finalW}px`;
     indicator!.style.transform = `translateX(${finalX}px)`;
     indicator!.classList.add('is-visible');
-    if (!animate || !hadWidth || reducedMotion) return;
-    const fromX = from.left - originX();
-    const sx = from.width / rect.width;
+    if (!animate || fromW === 0 || reducedMotion) return;
+    const sx = fromW / finalW;
     indicator!.animate(
       [
         { transform: `translateX(${fromX}px) scaleX(${sx})` },
@@ -59,6 +63,7 @@ export function mountTopNav({ reducedMotion }: { reducedMotion: boolean }): TopN
         active = null;
         indicator!.classList.remove('is-visible');
         indicator!.style.width = '0px';
+        indW = 0;
       }
       return; // 'contact' keeps the last highlighted section
     }
@@ -66,7 +71,8 @@ export function mountTopNav({ reducedMotion }: { reducedMotion: boolean }): TopN
     active?.classList.remove('is-active');
     link.classList.add('is-active');
     active = link;
-    moveIndicator(link, true);
+    if (collapsed) links.forEach((l) => (l.parentElement!.hidden = l !== active)); // keep only the new active visible
+    moveIndicator(link, !collapsed);
   }
 
   // ---- collapse / expand (desktop): fade labels, then FLIP the pill width with a counter-scaled active label ----
@@ -75,15 +81,15 @@ export function mountTopNav({ reducedMotion }: { reducedMotion: boolean }): TopN
     collapsed = next;
     topbar!.classList.toggle('is-collapsed', next);
     nav!.classList.toggle('is-collapsed', next);
-    const others = links.filter((l) => l !== active);
-    const before = nav!.getBoundingClientRect();
+    const before = nav!.offsetWidth;
 
     const relayout = () => {
-      others.forEach((l) => (l.parentElement!.hidden = next));
-      const after = nav!.getBoundingClientRect();
+      // decided at apply time: the active chapter may have changed during the label fade
+      links.forEach((l) => (l.parentElement!.hidden = next && l !== active));
+      const after = nav!.offsetWidth;
       if (active) moveIndicator(active, false);
-      if (reducedMotion || after.width === 0) return;
-      const s = before.width / after.width;
+      if (reducedMotion || after === 0) return;
+      const s = before / after;
       const opts: KeyframeAnimationOptions = { duration: 300, easing: EASE };
       nav!.animate([{ transform: `scaleX(${s})` }, { transform: 'scaleX(1)' }], opts);
       active?.animate([{ transform: `scaleX(${1 / s})` }, { transform: 'scaleX(1)' }], opts);

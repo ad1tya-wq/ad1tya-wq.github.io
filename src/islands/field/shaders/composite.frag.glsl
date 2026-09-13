@@ -52,9 +52,9 @@ void main() {
     lum = sceneAt(pxCss);
   }
 
-  // dim the field by half inside the current text column
-  vec2 lo = step(uTextRect.xy, pxCss);
-  vec2 hi = step(pxCss, uTextRect.xy + uTextRect.zw);
+  // dim the field by half inside the current text column, with a 48 px soft edge so no seam shows
+  vec2 lo = smoothstep(uTextRect.xy - 24.0, uTextRect.xy + 24.0, pxCss);
+  vec2 hi = 1.0 - smoothstep(uTextRect.xy + uTextRect.zw - 24.0, uTextRect.xy + uTextRect.zw + 24.0, pxCss);
   lum *= 1.0 - 0.5 * lo.x * lo.y * hi.x * hi.y;
 
   lum = clamp(lum * uExposure, 0.0, 1.0);
@@ -62,7 +62,7 @@ void main() {
   // ordered dither to four gray levels
   float q = floor(lum * 3.0 + bayer8(ivec2(gl_FragCoord.xy))) / 3.0;
   vec3 graphite = vec3(0.082, 0.086, 0.090);
-  vec3 fog = vec3(0.494, 0.514, 0.533);
+  vec3 fog = vec3(0.522, 0.541, 0.561);
   vec3 silver = vec3(0.796, 0.808, 0.820);
   vec3 core = vec3(0.953, 0.949, 0.929);
   vec3 col = q < 0.17 ? graphite : (q < 0.5 ? fog : (q < 0.84 ? silver : core));

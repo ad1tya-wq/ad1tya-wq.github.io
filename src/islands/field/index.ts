@@ -1,7 +1,7 @@
-import { attribute, createFbo, createProgram, uniforms } from './gl';
+import { attribute, createFbo, createProgramDeferred, uniforms } from './gl';
 import { computeAnchor, particleCount, textRectOf } from './layout';
 import { damp, holeRadiusPx, lerp, smoothstep } from './lifecycle';
-import { generateParticles } from './particles';
+import { generateParticles, type ParticleBuffers } from './particles';
 import type { FieldState } from './state';
 import { showPoster } from './fallback';
 import pointsVert from './shaders/points.vert.glsl?raw';
@@ -46,32 +46,74 @@ export function createField(canvas: HTMLCanvasElement, { state, projectCount }: 
   let vw = window.innerWidth;
   let vh = window.innerHeight;
   const count = particleCount(vw, vh, lowEnd);
-  const particles = generateParticles(count, projectCount);
+  const nameSlots = Math.round(0.55 * count); // same rule as generateParticles, known before the buffers arrive
+  let particles: ParticleBuffers | null = null;
+  let pendingName: Float32Array | null = null;
 
   // ---- programs ----
-  const pointsProg = createProgram(gl, pointsVert, pointsFrag);
-  const compProg = createProgram(gl, FULLSCREEN_VERT, compositeFrag);
-  const pu = uniforms(gl, pointsProg, POINT_UNIFORMS);
-  const cu = uniforms(gl, compProg, COMPOSITE_UNIFORMS);
-  const probeProg = createProgram(gl, probeVert, pointsFrag);
-  const qu = uniforms(gl, probeProg, ['uResolution', 'uDpr'] as const);
+  const pointsLink = createProgramDeferred(gl, pointsVert, pointsFrag);
+  const compLink = createProgramDeferred(gl, FULLSCREEN_VERT, compositeFrag);
+  const probeLink = createProgramDeferred(gl, probeVert, pointsFrag);
+  const pointsProg = pointsLink.program;
+  const compProg = compLink.program;
+  const probeProg = probeLink.program;
+  let programsReady = false;
+  // uniform locations are resolved once the links complete (see tick)
+  let pu = {} as ReturnType<typeof uniforms<(typeof POINT_UNIFORMS)[number]>>;
+  let cu = {} as ReturnType<typeof uniforms<(typeof COMPOSITE_UNIFORMS)[number]>>;
+  let qu = {} as ReturnType<typeof uniforms<'uResolution' | 'uDpr'>>;
   const probeVao = gl.createVertexArray()!;
-  gl.bindVertexArray(probeVao);
-  const probeBuf = attribute(gl, probeProg, 'aPos', new Float32Array(2 * 1200), 2, gl.DYNAMIC_DRAW);
-  gl.bindVertexArray(null);
+  let probeBuf: WebGLBuffer | null = null; // bound once the probe program has linked
 
   // ---- geometry ----
   const vao = gl.createVertexArray()!;
-  gl.bindVertexArray(vao);
-  attribute(gl, pointsProg, 'aSeed', particles.seed, 4);
-  attribute(gl, pointsProg, 'aStar', particles.star, 3);
-  attribute(gl, pointsProg, 'aEjecta', particles.ejecta, 4);
-  attribute(gl, pointsProg, 'aDisk', particles.disk, 4);
-  attribute(gl, pointsProg, 'aFragment', particles.fragment, 1);
-  attribute(gl, pointsProg, 'aShip', particles.ship, 3);
   const nameData = new Float32Array(2 * count).fill(-1);
-  const nameBuf = attribute(gl, pointsProg, 'aName', nameData, 2, gl.DYNAMIC_DRAW);
-  gl.bindVertexArray(null);
+  let nameBuf: WebGLBuffer | null = null;
+
+  function uploadName(pts: Float32Array) {
+    const n = Math.min(pts.length, 2 * nameSlots);
+    nameData.fill(-1);
+    nameData.set(pts.subarray(0, n));
+    if (!nameBuf) return;
+    gl.bindBuffer(gl.ARRAY_BUFFER, nameBuf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, nameData);
+  }
+
+  let stagedParticles: ParticleBuffers | null = null;
+  function adoptParticles(p: ParticleBuffers) {
+    if (!programsReady) {
+      stagedParticles = p; // attribute locations exist only after the link completes
+      return;
+    }
+    particles = p;
+    gl.bindVertexArray(vao);
+    attribute(gl, pointsProg, 'aSeed', p.seed, 4);
+    attribute(gl, pointsProg, 'aStar', p.star, 3);
+    attribute(gl, pointsProg, 'aEjecta', p.ejecta, 4);
+    attribute(gl, pointsProg, 'aDisk', p.disk, 4);
+    attribute(gl, pointsProg, 'aFragment', p.fragment, 1);
+    attribute(gl, pointsProg, 'aShip', p.ship, 3);
+    nameBuf = attribute(gl, pointsProg, 'aName', nameData, 2, gl.DYNAMIC_DRAW);
+    gl.bindVertexArray(null);
+    if (pendingName) uploadName(pendingName);
+    pendingName = null;
+  }
+
+  // generate off the main thread; fall back to inline generation if workers are unavailable
+  try {
+    const worker = new Worker(new URL('./particles.worker.ts', import.meta.url), { type: 'module' });
+    worker.onmessage = (e: MessageEvent<ParticleBuffers>) => {
+      adoptParticles(e.data);
+      worker.terminate();
+    };
+    worker.onerror = () => {
+      worker.terminate();
+      adoptParticles(generateParticles(count, projectCount));
+    };
+    worker.postMessage({ count, projectCount });
+  } catch {
+    adoptParticles(generateParticles(count, projectCount));
+  }
   const emptyVao = gl.createVertexArray()!; // for the fullscreen triangle
 
   // ---- targets ----
@@ -133,8 +175,8 @@ export function createField(canvas: HTMLCanvasElement, { state, projectCount }: 
     gl.uniform1f(pu.uHoverY, state.hoverY);
     gl.uniform1f(pu.uDiskScale, anchor.r * 0.16);
     gl.uniform1f(pu.uGain, gain);
-    gl.drawArrays(gl.POINTS, 0, particles.count);
-    if (probe && probe.length >= 2) {
+    if (particles) gl.drawArrays(gl.POINTS, 0, particles.count);
+    if (probe && probe.length >= 2 && probeBuf) {
       gl.useProgram(probeProg);
       gl.bindVertexArray(probeVao);
       gl.bindBuffer(gl.ARRAY_BUFFER, probeBuf);
@@ -170,6 +212,18 @@ export function createField(canvas: HTMLCanvasElement, { state, projectCount }: 
     last = now;
     frame++;
     if (document.hidden) return;
+    if (!programsReady) {
+      if (!(pointsLink.ready() && compLink.ready() && probeLink.ready())) return;
+      programsReady = true;
+      pu = uniforms(gl, pointsProg, POINT_UNIFORMS);
+      cu = uniforms(gl, compProg, COMPOSITE_UNIFORMS);
+      qu = uniforms(gl, probeProg, ['uResolution', 'uDpr'] as const);
+      gl.bindVertexArray(probeVao);
+      probeBuf = attribute(gl, probeProg, 'aPos', new Float32Array(2 * 1200), 2, gl.DYNAMIC_DRAW);
+      gl.bindVertexArray(null);
+      if (stagedParticles) adoptParticles(stagedParticles);
+      stagedParticles = null;
+    }
 
     state.progress = state.reducedMotion ? state.target : damp(state.progress, state.target, 8, dt);
     const moving = Math.abs(state.target - state.progress) > 1e-4 || state.force !== 0 || state.hover >= 0 || state.nameMix > 0 && state.nameMix < 1 || probe !== null;
@@ -201,13 +255,13 @@ export function createField(canvas: HTMLCanvasElement, { state, projectCount }: 
   raf = requestAnimationFrame(tick);
 
   return {
-    nameSlots: particles.nameSlots,
+    nameSlots,
     setNamePoints(pts) {
-      const n = Math.min(pts.length, 2 * particles.nameSlots);
-      nameData.fill(-1);
-      nameData.set(pts.subarray(0, n));
-      gl.bindBuffer(gl.ARRAY_BUFFER, nameBuf);
-      gl.bufferSubData(gl.ARRAY_BUFFER, 0, nameData);
+      if (!particles) {
+        pendingName = pts;
+        return;
+      }
+      uploadName(pts);
     },
     setNameBox(x, y, w, h) {
       nameBox = [x, y, w, h];

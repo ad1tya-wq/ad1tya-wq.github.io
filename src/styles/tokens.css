@@ -2,13 +2,13 @@
   /* palette: the only five colors on the site */
   --graphite: #151617;
   --smoke: #1f2123;
-  --fog: #7e8388;
+  --fog: #858a8f;
   --silver: #cbced1;
   --core: #f3f2ed;
   --hairline: color-mix(in srgb, var(--fog) 40%, transparent);
 
   /* type sizes (families come from the Fonts API: --font-display, --font-mono, --font-body) */
-  --fs-name: clamp(3.5rem, 11vw, 10.5rem);
+  --fs-name: clamp(3.5rem, 9.5vw, 10.5rem);
   --fs-h2: clamp(2rem, 3.4vw, 2.75rem);
   --fs-h3: 1.75rem;
   --fs-body: 1.0625rem;

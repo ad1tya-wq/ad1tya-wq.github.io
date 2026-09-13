@@ -14,7 +14,7 @@
 
 - Node ≥ 22.12 (Astro 7 floor). Repo: `D:\portfolio`, remote `origin` = `https://github.com/ad1tya-wq/ad1tya-wq.github.io.git`, branch `main`.
 - Commits authored only as `ad1tya-wq <sahu200431@gmail.com>` (already the global identity). **Never add a `Co-Authored-By` trailer.** Push with `git push origin main` after every commit step. Never force-push.
-- Palette is exactly: `--graphite #151617`, `--smoke #1F2123`, `--fog #7E8388`, `--silver #CBCED1`, `--core #F3F2ED`. No other color anywhere except the portrait's color layer. No gradients, glow, box-shadow, blur, glass.
+- Palette is exactly: `--graphite #151617`, `--smoke #1F2123`, `--fog #858A8F`, `--silver #CBCED1`, `--core #F3F2ED`. No other color anywhere except the portrait's color layer. No gradients, glow, box-shadow, blur, glass.
 - Fonts: Syne (name/headings), IBM Plex Mono (title/labels/dates/nav), IBM Plex Sans (body). Self-hosted via Astro's Fonts API; two preloaded (Syne, Plex Mono).
 - Only `transform` and `opacity` are animated in CSS/JS. No `scroll` event listeners; ScrollTrigger is the only scroll observer.
 - Copy: sentence case, no em-dashes (`—`) or en-dashes as separators anywhere in visible text, no "scroll" cues, no section numbers, no eyebrows. Contact CTA label is "Contact" (nav only); Contact section actions are "Email me" and "Download resume".

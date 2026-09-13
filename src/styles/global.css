@@ -125,6 +125,9 @@ h2 {
   position: relative;
   text-decoration: none;
   color: var(--core);
+  /* 44 px hit area without changing the layout */
+  padding-block: 9px;
+  margin-block: -9px;
 }
 .link::after {
   content: '';
