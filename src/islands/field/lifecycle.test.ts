@@ -3,7 +3,7 @@ import { CHAPTERS, MODE_TARGETS, chapterAt, chapterProgress, clamp01, damp, hole
 
 describe('CHAPTERS', () => {
   it('tile [0, 1] contiguously in spec order', () => {
-    expect(CHAPTERS.map((c) => c.id)).toEqual(['top', 'about', 'projects', 'skills', 'experience', 'horizon', 'contact']);
+    expect(CHAPTERS.map((c) => c.id)).toEqual(['top', 'about', 'projects', 'skills', 'certificates', 'experience', 'horizon', 'contact']);
     expect(CHAPTERS[0]!.start).toBe(0);
     expect(CHAPTERS[CHAPTERS.length - 1]!.end).toBe(1);
     for (let i = 1; i < CHAPTERS.length; i++) expect(CHAPTERS[i]!.start).toBe(CHAPTERS[i - 1]!.end);
@@ -31,6 +31,8 @@ describe('chapterAt', () => {
     expect(chapterAt(0)).toBe('top');
     expect(chapterAt(0.1)).toBe('about');
     expect(chapterAt(0.4)).toBe('projects');
+    expect(chapterAt(0.6)).toBe('skills');
+    expect(chapterAt(0.65)).toBe('certificates');
     expect(chapterAt(0.999)).toBe('contact');
     expect(chapterAt(1)).toBe('contact');
   });

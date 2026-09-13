@@ -22,6 +22,7 @@ const experience = defineCollection({
     start: z.string(),
     end: z.string().optional(),
     summary: z.string().max(200),
+    certificate: z.url().optional(),
     order: z.number().int(),
   }),
 });

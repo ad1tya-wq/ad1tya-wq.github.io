@@ -15,6 +15,9 @@ const items = (await getCollection('experience')).sort((a, b) => a.data.order - 
             <p class="entry__dates mono">{e.data.start} to {e.data.end ?? 'present'}</p>
             <p class="entry__role">{e.data.role}, {e.data.org}</p>
             <p class="entry__summary">{e.data.summary}</p>
+            {e.data.certificate && (
+              <a class="link entry__cert" href={e.data.certificate} rel="noopener" target="_blank">Certificate <span aria-hidden="true">↗</span></a>
+            )}
           </li>
         ))}
       </ul>
@@ -29,4 +32,5 @@ const items = (await getCollection('experience')).sort((a, b) => a.data.order - 
   .entry__dates { font-size: var(--fs-mono-sm); }
   .entry__role { margin-top: var(--s-1); font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; color: var(--core); }
   .entry__summary { margin-top: var(--s-1); max-width: var(--measure); }
+  .entry__cert { display: inline-block; margin-top: var(--s-2); font-family: var(--font-mono); font-size: var(--fs-mono-sm); letter-spacing: 0.06em; }
 </style>

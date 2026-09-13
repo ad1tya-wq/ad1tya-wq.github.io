@@ -3,7 +3,7 @@ import skills from '../content/skills.json';
 ---
 <section id="skills" class="section skills" data-chapter="skills" aria-labelledby="skills-h">
   <div class="skills__grid">
-    <div class="col skills__spectrum">
+    <div class="skills__spectrum">
       <h2 id="skills-h">Skills</h2>
       <div class="spectrum" data-spectrum>
         {skills.bands.map((band) => (
@@ -21,23 +21,12 @@ import skills from '../content/skills.json';
         ))}
       </div>
     </div>
-    <aside class="skills__soft" data-reveal aria-labelledby="soft-h">
-      <h3 id="soft-h">{skills.softTitle}</h3>
-      <ul class="soft">
-        {skills.soft.map((s) => <li>{s}</li>)}
-      </ul>
-    </aside>
   </div>
 </section>
 
 <style>
-  .skills__grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-    column-gap: var(--s-6);
-    align-items: start;
-  }
-  .skills__spectrum { width: 100%; }
+  .skills__grid { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .skills__spectrum { width: min(100%, 1100px); }
   .spectrum { display: grid; gap: var(--s-3); }
   .band {
     display: grid;
@@ -84,24 +73,9 @@ import skills from '../content/skills.json';
     transform: none;
   }
   .band.is-revealed .line__tick { background: var(--core); }
-  .skills__soft h3 {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 1.25rem;
-    color: var(--core);
-    margin-top: calc(var(--fs-h2) * 1.05 + var(--s-4));
-    margin-bottom: var(--s-3);
-  }
-  .soft { display: grid; gap: var(--s-2); max-width: var(--measure); }
-  .soft li {
-    padding-left: var(--s-3);
-    border-left: 1px solid var(--hairline);
-  }
   @media (max-width: 1023px) {
     .skills__grid { grid-template-columns: minmax(0, 1fr); row-gap: var(--s-5); }
-    .skills__soft h3 { margin-top: 0; }
-  }
-  @media (max-width: 767px) {
+    @media (max-width: 767px) {
     .band { grid-template-columns: minmax(0, 1fr); }
   }
   @media (prefers-reduced-motion: reduce) {

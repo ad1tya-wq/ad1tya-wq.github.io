@@ -1,4 +1,4 @@
-export type ChapterId = 'top' | 'about' | 'projects' | 'skills' | 'experience' | 'horizon' | 'contact';
+export type ChapterId = 'top' | 'about' | 'projects' | 'skills' | 'certificates' | 'experience' | 'horizon' | 'contact';
 
 export interface Chapter {
   id: ChapterId;
@@ -12,7 +12,8 @@ export const CHAPTERS: readonly Chapter[] = [
   { id: 'top', start: 0.0, end: 0.1, poster: 0.06 },
   { id: 'about', start: 0.1, end: 0.28, poster: 0.19 },
   { id: 'projects', start: 0.28, end: 0.55, poster: 0.42 },
-  { id: 'skills', start: 0.55, end: 0.68, poster: 0.62 },
+  { id: 'skills', start: 0.55, end: 0.62, poster: 0.58 },
+  { id: 'certificates', start: 0.62, end: 0.68, poster: 0.65 },
   { id: 'experience', start: 0.68, end: 0.82, poster: 0.78 },
   { id: 'horizon', start: 0.82, end: 0.94, poster: 0.92 },
   { id: 'contact', start: 0.94, end: 1.0, poster: 1.0 },

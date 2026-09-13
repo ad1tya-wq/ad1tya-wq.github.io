@@ -12,6 +12,7 @@ export const chapters = [
   { id: 'about', label: 'About' },
   { id: 'projects', label: 'Projects' },
   { id: 'skills', label: 'Skills' },
+  { id: 'certificates', label: 'Certificates' },
   { id: 'experience', label: 'Experience' },
   { id: 'horizon', label: 'Horizon' },
 ] as const;
