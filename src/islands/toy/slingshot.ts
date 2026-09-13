@@ -57,3 +57,21 @@ export function stepProbe(p: Probe, cfg: ProbeConfig, dt: number, substeps = 8):
   else if (p.t > cfg.orbitAfter) p.outcome = 'orbiting';
   return p;
 }
+
+/** Escape speed from radius r in the Paczyński-Wiita potential: v = sqrt(2 GM / (r - r_s)). */
+export function escapeSpeed(r: number, cfg: Pick<ProbeConfig, 'gm' | 'rs'>): number {
+  return Math.sqrt((2 * cfg.gm) / Math.max(r - cfg.rs, 0.05));
+}
+
+/** The path a probe launched with this state would fly: x, y pairs per step, ending early at capture or escape. */
+export function predict(x: number, y: number, vx: number, vy: number, cfg: ProbeConfig, steps: number, dt: number): Float32Array {
+  const p = createProbe(x, y, vx, vy, 1);
+  const out = new Float32Array(2 * steps);
+  let n = 0;
+  for (; n < steps && p.outcome === 'flying'; n++) {
+    stepProbe(p, cfg, dt);
+    out[2 * n] = p.x;
+    out[2 * n + 1] = p.y;
+  }
+  return out.subarray(0, 2 * n);
+}

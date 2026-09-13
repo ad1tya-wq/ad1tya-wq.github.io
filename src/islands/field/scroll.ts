@@ -44,8 +44,11 @@ export function mountScroll({ state, onChapter, onScroll }: ScrollOptions) {
     }),
   );
 
-  // before the hero centre the star is at rest
-  state.target = state.reducedMotion ? CHAPTERS[0]!.poster : 0;
+  // initial target from wherever the page already is (a hash landing, a reload mid-page); at rest otherwise
+  const active = triggers.find((t) => t.isActive && t.vars.trigger);
+  const chapter = active ? CHAPTERS.find((c) => c.id === (active.vars.trigger as HTMLElement).dataset.chapter) : undefined;
+  state.target = chapter ? (state.reducedMotion ? chapter.poster : chapterProgress(chapter.id, active!.progress)) : state.reducedMotion ? CHAPTERS[0]!.poster : 0;
+  if (chapter) state.progress = state.target; // no damped flight from the hero on a deep link
 
   return {
     refresh: () => ScrollTrigger.refresh(),

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { accel, createProbe, stepProbe } from './slingshot';
+import { accel, createProbe, escapeSpeed, predict, stepProbe } from './slingshot';
 
 const cfg = { gm: 1, rs: 1, captureRadius: 1.5, escapeRadius: 60, orbitAfter: 40 };
 
@@ -39,5 +39,26 @@ describe('stepProbe', () => {
     const p = createProbe(10, 0, 0, 0.6, 50);
     for (let i = 0; i < 200; i++) stepProbe(p, cfg, 1 / 120);
     expect(p.trailCount).toBe(50);
+  });
+});
+
+describe('escapeSpeed and predict', () => {
+  it('escape speed falls with distance and diverges toward r_s', () => {
+    expect(escapeSpeed(20, cfg)).toBeLessThan(escapeSpeed(5, cfg));
+    expect(escapeSpeed(1.2, cfg)).toBeGreaterThan(escapeSpeed(1.5, cfg));
+    expect(escapeSpeed(3, cfg)).toBeCloseTo(Math.sqrt(2 * cfg.gm / (3 - cfg.rs)));
+  });
+  it('predict returns the path a real probe would fly and stops at the outcome', () => {
+    const path = predict(-14, 5, 3, 0, cfg, 400, 1 / 40);
+    expect(path.length).toBeGreaterThan(20);
+    expect(path.length % 2).toBe(0);
+    const p = createProbe(-14, 5, 3, 0);
+    for (let i = 0; i < 10; i++) stepProbe(p, cfg, 1 / 40);
+    expect(path[2 * 9]).toBeCloseTo(p.x, 5); // the 10th predicted point is the 10th real step
+    expect(path[2 * 9 + 1]).toBeCloseTo(p.y, 5);
+  });
+  it('predict of a probe at rest ends captured, shorter than the step budget', () => {
+    const path = predict(8, 0, 0, 0, cfg, 5000, 1 / 40);
+    expect(path.length / 2).toBeLessThan(5000);
   });
 });
