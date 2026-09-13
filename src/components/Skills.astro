@@ -1,67 +1,110 @@
 ---
 import skills from '../content/skills.json';
 ---
-<section id="skills" class="section" data-chapter="skills" aria-labelledby="skills-h">
-  <div class="col">
-    <h2 id="skills-h">Skills</h2>
-    <div class="spectrum" data-spectrum data-reveal>
-      {skills.bands.map((band) => (
-        <div class="band">
-          <p class="band__name mono">{band.name}</p>
-          <ul class="band__lines">
-            {band.items.map((item) => (
-              <li class="line">
-                <button type="button" class="line__hit">
-                  <span class="line__bar" aria-hidden="true"></span>
-                  <span class="line__label mono">{item}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+<section id="skills" class="section skills" data-chapter="skills" aria-labelledby="skills-h">
+  <div class="skills__grid">
+    <div class="col skills__spectrum">
+      <h2 id="skills-h">Skills</h2>
+      <div class="spectrum" data-spectrum>
+        {skills.bands.map((band) => (
+          <div class="band" data-band>
+            <p class="band__name mono">{band.name}</p>
+            <ul class="band__lines">
+              {band.items.map((item) => (
+                <li class="line">
+                  <span class="line__tick" aria-hidden="true"></span>
+                  <span class="line__label">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
     </div>
-    <ul class="soft prose" data-reveal>
-      {skills.soft.map((s) => <li>{s}</li>)}
-    </ul>
+    <aside class="skills__soft" data-reveal aria-labelledby="soft-h">
+      <h3 id="soft-h">{skills.softTitle}</h3>
+      <ul class="soft">
+        {skills.soft.map((s) => <li>{s}</li>)}
+      </ul>
+    </aside>
   </div>
 </section>
 
 <style>
+  .skills__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    column-gap: var(--s-6);
+    align-items: start;
+  }
+  .skills__spectrum { width: 100%; }
   .spectrum { display: grid; gap: var(--s-3); }
-  .band { display: grid; grid-template-columns: 8rem 1fr; align-items: center; gap: var(--s-2); }
-  .band__name { font-size: var(--fs-mono-sm); }
+  .band {
+    display: grid;
+    grid-template-columns: 9rem minmax(0, 1fr);
+    align-items: start;
+    gap: var(--s-2);
+    padding-block: var(--s-2);
+    border-top: 1px solid var(--hairline);
+  }
+  .band:last-child { border-bottom: 1px solid var(--hairline); }
+  .band__name { font-size: var(--fs-mono-sm); padding-top: 0.35em; }
   .band__lines {
-    position: relative;
     display: flex;
-    justify-content: space-evenly;
-    height: 64px;
-    border-block: 1px solid var(--hairline);
+    flex-wrap: wrap;
+    column-gap: var(--s-3);
+    row-gap: var(--s-1);
   }
-  .line__hit { position: relative; width: 44px; height: 64px; display: grid; place-items: center; }
-  .line__bar {
-    display: block;
+  .line {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 32px;
+    color: var(--silver);
+  }
+  .line__tick {
+    display: inline-block;
     width: 2px;
-    height: 40px;
-    background: var(--silver);
-    transition: transform var(--d-hover) var(--ease-out), background-color var(--d-hover) var(--ease-out);
+    height: 20px;
+    background: var(--fog);
+    transition: background-color var(--d-reveal) var(--ease-out);
   }
+  /* the label keeps its width from the start (no layout shift); the reveal is paint-only */
   .line__label {
-    position: absolute;
-    top: -1.5rem;
-    left: 50%;
+    display: inline-block;
     white-space: nowrap;
-    font-size: var(--fs-mono-sm);
-    color: var(--core);
-    opacity: 0;
-    transform: translate(-50%, 4px);
-    transition: opacity var(--d-hover) var(--ease-out), transform var(--d-hover) var(--ease-out);
-    pointer-events: none;
+    clip-path: inset(0 100% 0 0);
+    transform: translateX(-6px);
+    transition:
+      clip-path 420ms var(--ease-out),
+      transform 420ms var(--ease-out);
   }
-  .line__hit:hover .line__bar, .line__hit:focus-visible .line__bar { background: var(--core); transform: scaleY(1.2); }
-  .line__hit:hover .line__label, .line__hit:focus-visible .line__label { opacity: 1; transform: translate(-50%, 0); }
-  .soft { margin-top: var(--s-5); }
+  .band.is-revealed .line__label {
+    clip-path: inset(0 0 0 0);
+    transform: none;
+  }
+  .band.is-revealed .line__tick { background: var(--core); }
+  .skills__soft h3 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--core);
+    margin-top: calc(var(--fs-h2) * 1.05 + var(--s-4));
+    margin-bottom: var(--s-3);
+  }
+  .soft { display: grid; gap: var(--s-2); max-width: var(--measure); }
+  .soft li {
+    padding-left: var(--s-3);
+    border-left: 1px solid var(--hairline);
+  }
+  @media (max-width: 1023px) {
+    .skills__grid { grid-template-columns: minmax(0, 1fr); row-gap: var(--s-5); }
+    .skills__soft h3 { margin-top: 0; }
+  }
   @media (max-width: 767px) {
-    .band { grid-template-columns: 1fr; }
+    .band { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .line__label { clip-path: inset(0 0 0 0); transform: none; }
   }
 </style>

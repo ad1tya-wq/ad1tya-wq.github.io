@@ -17,6 +17,17 @@ export function mountReveals({ reducedMotion }: { reducedMotion: boolean }): voi
     });
   }
 
+  // skills: each band's labels slide out of their ticks once, staggered, as the band enters
+  document.querySelectorAll<HTMLElement>('[data-band]').forEach((band) => {
+    const labels = Array.from(band.querySelectorAll<HTMLElement>('.line__label'));
+    labels.forEach((l, i) => (l.style.transitionDelay = reducedMotion ? '0ms' : `${i * 45}ms`));
+    if (reducedMotion) {
+      band.classList.add('is-revealed');
+      return;
+    }
+    ScrollTrigger.create({ trigger: band, start: 'top 82%', once: true, onEnter: () => band.classList.add('is-revealed') });
+  });
+
   // the experience hairline draws itself as the section scrolls by (accretion spiral)
   const path = document.querySelector<SVGPathElement>('[data-spiral] path');
   if (!path) return;

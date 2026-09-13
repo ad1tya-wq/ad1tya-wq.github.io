@@ -9,7 +9,6 @@ import { site } from '../content/site';
   <div class="col hero__col">
     <p class="hero__title mono">{site.title}</p>
     <p class="hero__line">{site.line}</p>
-    <a class="link" href="#projects">Projects</a>
   </div>
 </section>
 
@@ -64,7 +63,6 @@ import { site } from '../content/site';
   }
   .hero__title { font-size: var(--fs-mono); }
   .hero__line { margin-top: var(--s-2); }
-  .hero__col > .link { display: inline-block; margin-top: var(--s-3); }
   @media (max-width: 767px) {
     .hero { min-height: auto; padding-top: calc(var(--s-5) + 44px); }
     .hero__name { white-space: normal; font-size: clamp(2.75rem, 16vw, 5rem); }

@@ -4,11 +4,14 @@
     { "name": "ML and data", "items": ["PyTorch", "LightGBM", "XGBoost", "SHAP", "scikit-learn", "Pandas"] },
     { "name": "LLM and agents", "items": ["LangChain", "LangGraph", "RAG", "ChromaDB", "Meta Prophet", "Docling"] },
     { "name": "Backend and web", "items": ["FastAPI", "Streamlit", "MySQL"] },
-    { "name": "AppSec tooling", "items": ["OWASP ZAP", "SonarQube", "Trivy", "SAST, DAST, SCA"] }
+    { "name": "AppSec tooling", "items": ["OWASP ZAP", "SonarQube", "Trivy", "SAST, DAST and SCA"] }
   ],
+  "softTitle": "How I work",
   "soft": [
-    "I write down the failure modes before I write the code.",
-    "I would rather ship a small, proven thing than a large, promised one.",
-    "I have run rooms of 600 and hackathons of 800; logistics do not scare me."
+    "I run rooms. I hosted a 600-seat tech talk and organised a 72-hour hackathon for 800 participants, sponsors included.",
+    "I work at the seam between teams. Security engineers, ML people and event partners rarely share a vocabulary, and I translate.",
+    "I ship to someone else's standard. My internship work was built to Caze Labs' conventions, not mine.",
+    "I do well under a clock. Three hackathon placings in a year, each with a team that met the week before.",
+    "I follow interesting problems. I landed in ML and application security by chance and stayed on purpose."
   ]
 }
