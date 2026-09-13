@@ -8,6 +8,8 @@ const projects = defineCollection({
   schema: z.object({
     title: z.string(),
     summary: z.string().max(140),
+    /** two or three sentences: how it works and why it matters */
+    detail: z.string().max(420),
     stack: z.array(z.string()).min(1),
     repo: z.url(),
     url: z.url().optional(),

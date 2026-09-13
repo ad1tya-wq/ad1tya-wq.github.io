@@ -26,6 +26,7 @@ const first = projects[0]!;
             <span class="row__arrow" aria-hidden="true">↗</span>
           </a>
           <p class="row__summary">{p.data.summary}</p>
+          <p class="row__detail" data-detail>{p.data.detail}</p>
           <p class="row__stack mono">{p.data.stack.join(' / ')}</p>
         </li>
       ))}
@@ -41,6 +42,7 @@ const first = projects[0]!;
       <div class="readout__fact"><dt>stack</dt><dd data-readout-stack>{first.data.stack.slice(0, 2).join(' / ')}</dd></div>
       <div class="readout__fact" data-readout-year-row hidden={!first.data.year}><dt>year</dt><dd data-readout-year>{first.data.year ?? ''}</dd></div>
     </dl>
+    <p class="readout__detail" data-readout-detail>{first.data.detail}</p>
   </aside>
 </section>
 
@@ -73,6 +75,7 @@ const first = projects[0]!;
   .row:hover .row__title, .row:focus-within .row__title { transform: translateX(4px); }
   .row:hover .row__arrow, .row:focus-within .row__arrow { opacity: 1; transform: none; }
   .row__summary { margin-top: var(--s-1); max-width: var(--measure); }
+  .row__detail { margin-top: var(--s-2); max-width: var(--measure); color: var(--silver); }
   .row__stack { margin-top: var(--s-1); font-size: var(--fs-mono-sm); }
 
   .readout { display: none; }
@@ -80,10 +83,13 @@ const first = projects[0]!;
   @media (min-width: 1024px) {
     #projects {
       display: grid;
-      grid-template-columns: minmax(0, 600px) minmax(0, 1fr);
-      column-gap: var(--s-5);
+      grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+      column-gap: var(--s-6);
     }
     #projects > .col { width: 100%; } /* the grid track, not the global 46 %, sets the column here */
+    /* on desktop the deeper explanation is shown in the readout (aria-hidden), so keep the row's copy for assistive tech only */
+    .row { position: relative; }
+    .row__detail { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
     .readout {
       display: block;
       position: sticky;
@@ -91,8 +97,11 @@ const first = projects[0]!;
       align-self: start;
       translate: 0 -50%;
       justify-self: center;
-      width: 320px;
+      width: min(100%, 400px);
     }
+    .readout__detail { margin-top: var(--s-3); color: var(--silver); font-size: 0.9375rem; line-height: 1.55; }
+    .readout__detail { transition: opacity 160ms var(--ease-out), translate 160ms var(--ease-out); }
+    .readout.is-switching .readout__detail { opacity: 0; translate: 0 -3px; }
     .readout__slot { width: 220px; height: 220px; margin-inline: auto; }
     .readout__facts { display: grid; gap: var(--s-1); margin-top: var(--s-3); font-size: var(--fs-mono-sm); color: var(--fog); }
     .readout__fact { display: grid; grid-template-columns: 6ch 1fr; gap: var(--s-2); }
