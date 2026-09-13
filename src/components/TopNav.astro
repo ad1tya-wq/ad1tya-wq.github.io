@@ -1,0 +1,132 @@
+---
+import { site, chapters } from '../content/site';
+---
+<header class="topbar" data-topbar>
+  <a class="wordmark" href="#top">{site.name}</a>
+
+  <nav class="pill" aria-label="Sections" data-nav>
+    <button class="pill__toggle" type="button" aria-expanded="false" aria-controls="site-nav-list" data-nav-toggle>
+      <span class="sr-only">Open section menu</span>
+      <span class="pill__toggle-bar" aria-hidden="true"></span>
+      <span class="pill__toggle-bar" aria-hidden="true"></span>
+    </button>
+    <span class="pill__indicator" aria-hidden="true" data-indicator></span>
+    <ul class="pill__list" id="site-nav-list">
+      {chapters.map((c) => (
+        <li><a class="pill__item" href={`#${c.id}`} data-chapter-link={c.id}>{c.label}</a></li>
+      ))}
+    </ul>
+  </nav>
+
+  <a class="btn btn--primary topbar__contact" href="#contact">Contact</a>
+</header>
+
+<style>
+  .topbar {
+    position: fixed;
+    inset: 20px 20px auto 20px;
+    z-index: 50;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: var(--s-2);
+    pointer-events: none;
+  }
+  .topbar > * { pointer-events: auto; }
+  .wordmark {
+    justify-self: start;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.875rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--core);
+    transition: opacity var(--d-hover) var(--ease-out);
+  }
+  .topbar__contact {
+    justify-self: end;
+    transition:
+      background-color var(--d-hover) var(--ease-out),
+      color var(--d-hover) var(--ease-out),
+      transform var(--d-press) var(--ease-out),
+      opacity var(--d-hover) var(--ease-out);
+  }
+  .pill {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 44px;
+    padding: 0 6px;
+    border-radius: var(--r-pill);
+    background: var(--smoke);
+    border: 1px solid var(--hairline);
+    transform-origin: center;
+  }
+  .pill__list { display: flex; align-items: center; gap: 2px; }
+  .pill__item {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: var(--r-pill);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono-sm);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--fog);
+    transition:
+      color var(--d-hover) var(--ease-out),
+      opacity var(--d-hover) var(--ease-out),
+      transform var(--d-press) var(--ease-out);
+  }
+  .pill__item:hover { color: var(--core); }
+  .pill__item:active { transform: scale(0.98); }
+  .pill__item.is-active { color: var(--graphite); }
+  .pill__indicator {
+    position: absolute;
+    top: 5px;
+    left: 0;
+    height: 32px;
+    width: 0;
+    border-radius: var(--r-pill);
+    background: var(--core);
+    transform-origin: left center;
+    opacity: 0;
+  }
+  .pill__indicator.is-visible { opacity: 1; }
+  .pill__toggle {
+    display: none;
+    width: 44px;
+    height: 44px;
+    margin-left: -6px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .pill__toggle-bar {
+    width: 16px;
+    height: 1.5px;
+    background: var(--core);
+    transition: transform var(--d-nav-open) var(--ease-out);
+  }
+  .pill__toggle[aria-expanded='true'] .pill__toggle-bar:first-of-type { transform: translateY(3.25px) rotate(45deg); }
+  .pill__toggle[aria-expanded='true'] .pill__toggle-bar:last-of-type { transform: translateY(-3.25px) rotate(-45deg); }
+
+  /* collapsed state: Task 12 toggles these classes */
+  .topbar.is-collapsed .wordmark,
+  .topbar.is-collapsed .topbar__contact { opacity: 0.6; }
+  .pill.is-collapsed .pill__item:not(.is-active) { opacity: 0; }
+
+  @media (max-width: 767px) {
+    .topbar { inset: 12px 12px auto 12px; grid-template-columns: auto 1fr auto; }
+    .wordmark { font-size: 0.75rem; }
+    .pill { justify-self: center; }
+    .pill__toggle { display: inline-flex; }
+    .topbar__contact { padding-inline: var(--s-2); }
+  }
+</style>

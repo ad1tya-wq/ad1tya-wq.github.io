@@ -1,0 +1,50 @@
+:root {
+  /* palette: the only five colors on the site */
+  --graphite: #151617;
+  --smoke: #1f2123;
+  --fog: #7e8388;
+  --silver: #cbced1;
+  --core: #f3f2ed;
+  --hairline: color-mix(in srgb, var(--fog) 40%, transparent);
+
+  /* type sizes (families come from the Fonts API: --font-display, --font-mono, --font-body) */
+  --fs-name: clamp(3.5rem, 11vw, 10.5rem);
+  --fs-h2: clamp(2rem, 3.4vw, 2.75rem);
+  --fs-h3: 1.75rem;
+  --fs-body: 1.0625rem;
+  --fs-mono: 0.875rem;
+  --fs-mono-sm: 0.8125rem;
+  --lh-body: 1.6;
+  --measure: 62ch;
+
+  /* spacing scale */
+  --s-1: 8px;
+  --s-2: 16px;
+  --s-3: 24px;
+  --s-4: 40px;
+  --s-5: 64px;
+  --s-6: 96px;
+  --s-7: 160px;
+  --section-pad: var(--s-7);
+  --gutter: clamp(20px, 5vw, 72px);
+
+  /* shape: pills for controls, square for everything else */
+  --r-pill: 999px;
+
+  /* motion */
+  --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --d-hover: 160ms;
+  --d-press: 90ms;
+  --d-reveal: 350ms;
+  --d-nav-open: 320ms;
+  --d-nav-close: 200ms;
+  --d-image: 220ms;
+  --d-mode: 1100ms;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --section-pad: var(--s-6);
+  }
+}
