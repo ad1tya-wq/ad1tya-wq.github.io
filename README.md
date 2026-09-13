@@ -41,6 +41,10 @@ All text stays at or above 4.5:1 against its surface at every scroll position; e
 and a 42 px or taller hit area; `prefers-reduced-motion` gets a static field, the real text name, and instant state changes;
 no WebGL2 gets a dithered poster.
 
+## Horizon controls
+
+Launch: press anywhere in the section and drag; the predicted path is drawn while you aim, release to launch (arrow keys retune the default shot from the button). Mass: the slider scales the hole and its gravity and eats the page's text, nearest first; lowering it restores the text; at full mass "Reset the universe?" reloads the page.
+
 ## Reserved for later
 
 `#play`: a Spaceship Battleship section with an in-browser ML opponent (ONNX Runtime Web), to be built as a lazy-loaded
