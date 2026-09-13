@@ -67,6 +67,11 @@ img, picture, svg, canvas { display: block; max-width: 100%; }
 
 main { position: relative; z-index: 1; }
 
+/* fallback when WebGL is unavailable or its context was lost */
+body.is-poster {
+  background: var(--graphite) url(/poster.png) center / cover fixed no-repeat;
+}
+
 .section {
   position: relative;
   padding-block: var(--section-pad);

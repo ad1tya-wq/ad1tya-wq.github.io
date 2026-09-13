@@ -3,29 +3,30 @@ import { site } from '../content/site';
 ---
 <section id="top" class="section hero" data-chapter="top" aria-labelledby="hero-name">
   <h1 id="hero-name" class="hero__name" data-name>{site.name}</h1>
-  <div class="hero__row">
-    <div class="col hero__col">
-      <p class="hero__title mono">{site.title}</p>
-      <p class="hero__line">{site.line}</p>
-      <a class="link" href="#projects">Projects</a>
-    </div>
-    <div class="hero__portrait">
-      <slot name="portrait" />
-    </div>
+  <div class="hero__portrait">
+    <slot name="portrait" />
+  </div>
+  <div class="col hero__col">
+    <p class="hero__title mono">{site.title}</p>
+    <p class="hero__line">{site.line}</p>
+    <a class="link" href="#projects">Projects</a>
   </div>
 </section>
 
 <style>
+  /* Cover layout: the name spans the width like a masthead, the cut-out portrait stands in front of its lower half,
+     the details sit bottom-left. The particle name (on the canvas) ends up behind the head. */
   .hero {
+    position: relative;
     overflow: clip;
     min-height: 100dvh;
     display: grid;
-    grid-template-rows: auto 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
     align-content: start;
-    row-gap: clamp(var(--s-4), 8vh, var(--s-6));
     padding-top: calc(var(--s-5) + 44px);
+    padding-bottom: 0;
   }
-  /* the masthead: one line, spanning the width, uppercase Syne */
   .hero__name {
     font-family: var(--font-display);
     font-weight: 800;
@@ -39,18 +40,42 @@ import { site } from '../content/site';
     transition: opacity 400ms var(--ease-out);
   }
   .hero__name.is-assembled { opacity: 0; }
-  .hero__row {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: end;
-    column-gap: var(--s-4);
+  .hero__portrait {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    height: min(80vh, 740px);
+    width: auto;
+    aspect-ratio: 791 / 720;
+    z-index: 1;
   }
-  .hero__col { width: min(100%, 560px); }
+  .hero__portrait :global(.dimg) {
+    height: 100%;
+    width: 100%;
+  }
+  .hero__col {
+    position: relative;
+    z-index: 2;
+    grid-row: 3;
+    align-self: end;
+    width: min(100%, 34ch);
+    padding-bottom: var(--s-5);
+  }
   .hero__title { font-size: var(--fs-mono); }
-  .hero__line { margin-top: var(--s-2); max-width: 44ch; }
-  .hero__col > .link { display: inline-block; margin-top: var(--s-4); }
+  .hero__line { margin-top: var(--s-2); }
+  .hero__col > .link { display: inline-block; margin-top: var(--s-3); }
   @media (max-width: 767px) {
-    .hero__row { grid-template-columns: 1fr; row-gap: var(--s-4); }
-    .hero__portrait { order: -1; width: 120px; }
+    .hero { min-height: auto; padding-top: calc(var(--s-5) + 44px); }
+    .hero__name { white-space: normal; font-size: clamp(2.75rem, 16vw, 5rem); }
+    .hero__portrait {
+      position: relative;
+      left: auto;
+      transform: none;
+      margin: var(--s-2) auto 0;
+      width: min(100%, 88vw);
+      height: auto;
+    }
+    .hero__col { width: 100%; padding-bottom: var(--s-4); margin-top: var(--s-4); }
   }
 </style>

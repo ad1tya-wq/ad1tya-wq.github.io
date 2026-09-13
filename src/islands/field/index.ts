@@ -3,7 +3,7 @@ import { computeAnchor, particleCount, textRectOf } from './layout';
 import { damp, holeRadiusPx, lerp, smoothstep } from './lifecycle';
 import { generateParticles, type ParticleBuffers } from './particles';
 import type { FieldState } from './state';
-import { showPoster } from './fallback';
+import { hidePoster, showPoster } from './fallback';
 import pointsVert from './shaders/points.vert.glsl?raw';
 import pointsFrag from './shaders/points.frag.glsl?raw';
 import compositeFrag from './shaders/composite.frag.glsl?raw';
@@ -32,7 +32,53 @@ export interface FieldOptions {
 const POINT_UNIFORMS = ['uResolution', 'uDpr', 'uProgress', 'uTime', 'uAnchor', 'uRadius', 'uNameBox', 'uNameMix', 'uPointer', 'uPointerForce', 'uHover', 'uHoverY', 'uDiskScale', 'uGain'] as const;
 const COMPOSITE_UNIFORMS = ['uScene', 'uResolution', 'uDpr', 'uHole', 'uRsPx', 'uTextRect', 'uExposure'] as const;
 
-export function createField(canvas: HTMLCanvasElement, { state, projectCount }: FieldOptions): Field | null {
+/** Creates the field and rebuilds it transparently if the WebGL context is lost and later restored. */
+export function createField(canvas: HTMLCanvasElement, opts: FieldOptions): Field | null {
+  let inner = createRenderer(canvas, opts);
+  if (!inner) return null;
+  // remembered so a rebuilt renderer can pick up where the old one left off
+  let lastName: Float32Array | null = null;
+  let lastBox: [number, number, number, number] | null = null;
+  let lastColumn: Element | null = null;
+  let lastProbe: Float32Array | null = null;
+  const onRestored = () => {
+    inner?.destroy();
+    inner = createRenderer(canvas, opts);
+    if (!inner) return;
+    hidePoster(canvas);
+    if (lastName) inner.setNamePoints(lastName);
+    if (lastBox) inner.setNameBox(...lastBox);
+    inner.setChapterColumn(lastColumn);
+    inner.setProbe(lastProbe);
+  };
+  canvas.addEventListener('webglcontextrestored', onRestored);
+  return {
+    nameSlots: inner.nameSlots,
+    setNamePoints(pts) {
+      lastName = pts;
+      inner?.setNamePoints(pts);
+    },
+    setNameBox(x, y, w, h) {
+      lastBox = [x, y, w, h];
+      inner?.setNameBox(x, y, w, h);
+    },
+    setProbe(pts) {
+      lastProbe = pts;
+      inner?.setProbe(pts);
+    },
+    setChapterColumn(el) {
+      lastColumn = el;
+      inner?.setChapterColumn(el);
+    },
+    destroy() {
+      canvas.removeEventListener('webglcontextrestored', onRestored);
+      inner?.destroy();
+      inner = null;
+    },
+  };
+}
+
+function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: FieldOptions): Field | null {
   const ctx = canvas.getContext('webgl2', { antialias: false, alpha: false, premultipliedAlpha: false, powerPreference: 'high-performance' });
   if (!ctx) {
     showPoster(canvas);
