@@ -48,6 +48,7 @@ export function mountDevour({ state, field, reducedMotion }: { state: FieldState
   };
   leaves.forEach((el) => add(el, 'text', el.closest('#contact') ? 1 : 0)); // contact details go after the rest of the page
   add(document.querySelector<HTMLElement>('.hero__portrait'), 'image');
+  document.querySelectorAll<HTMLElement>('.seal').forEach((el) => add(el, 'fade')); // certificate seals go with their plates
   add(document.querySelector<HTMLElement>('.wordmark'), 'text', 2);
   add(document.querySelector<HTMLElement>('.topbar__contact'), 'text', 2);
   add(document.querySelector<HTMLElement>('[data-nav]'), 'fade', 2);
@@ -57,7 +58,7 @@ export function mountDevour({ state, field, reducedMotion }: { state: FieldState
   const pool = new RingPool(field?.eatSlots ?? 0);
   const usesParticles = !!field && !reducedMotion && pool.size > 0;
 
-  // ---- geometry: measured lazily, invalidated on resize ----
+  // ---- geometry: measured once, on first use (a later resize would only reorder blocks that are already eaten) ----
   let ordered: Ordered[] | null = null;
   const measure = (): Ordered[] => {
     if (ordered) return ordered;
@@ -72,7 +73,6 @@ export function mountDevour({ state, field, reducedMotion }: { state: FieldState
     ordered = orderBlocks(geoms, hole);
     return ordered;
   };
-  window.addEventListener('resize', () => (ordered = null));
 
   // ---- sampling: document-space glyph points for a block ----
   const sample = (b: Block): Float32Array | null => {
@@ -167,7 +167,7 @@ export function mountDevour({ state, field, reducedMotion }: { state: FieldState
   let eaten = 0;
   let voidTimer = 0;
   const apply = () => {
-    const m = Number(slider.value) / 1000;
+    const m = Number(slider.value) / 100;
     state.mass = m;
     const solar = 1 + 9 * m;
     out.textContent = `${solar.toFixed(1)} M☉`;

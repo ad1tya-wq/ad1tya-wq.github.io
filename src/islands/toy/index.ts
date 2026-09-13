@@ -151,7 +151,7 @@ export function mountToy({ state, field, pointer, reducedMotion }: ToyDeps): voi
     };
   };
   section.addEventListener('pointerdown', (e) => {
-    if ((e.target as Element).closest('a, button, input')) return;
+    if ((e.target as Element).closest('a, button, input, label, output, [data-devour]')) return;
     if (probe && probe.outcome === 'flying') return;
     e.preventDefault(); // no text selection while aiming
     dragStart = { x: e.clientX, y: e.clientY };

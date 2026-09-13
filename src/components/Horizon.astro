@@ -14,7 +14,7 @@
         <span>mass</span>
         <output for="mass" data-mass-out>1.0 M☉</output>
       </label>
-      <input class="mass__slider" id="mass" type="range" min="0" max="1000" step="1" value="0" aria-valuetext="1.0 solar masses" data-mass />
+      <input class="mass__slider" id="mass" type="range" min="0" max="100" step="1" value="0" aria-valuetext="1.0 solar masses" data-mass />
       <p class="mass__hint mono" aria-live="polite" data-mass-status>More mass, more reach.</p>
         <button type="button" class="btn btn--primary mass__reset" data-mass-reset hidden>Reset the universe?</button>
       </div>
@@ -81,5 +81,5 @@
 
   /* eaten blocks keep their box (no reflow) and lose their ink; the fade only matters for blocks without particles */
   :global(.is-eaten) { visibility: hidden !important; transition: none !important; }
-  :global(.is-fading) { opacity: 0 !important; transition: opacity 400ms var(--ease-out) !important; }
+  :global(.is-fading) { opacity: 0 !important; pointer-events: none !important; transition: opacity 400ms var(--ease-out) !important; }
 </style>
