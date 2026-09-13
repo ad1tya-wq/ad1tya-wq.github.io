@@ -24,8 +24,10 @@ your name, a star, core collapse, shock breakout, ejecta, remnant (with a spacec
 1. `src/content/site.ts`: name, title, one-line bio, LinkedIn URL.
 2. `src/components/About.astro`: two or three short paragraphs.
 3. `src/content/projects/*.md`: reorder, drop, or tighten summaries (140 characters max).
-4. `src/content/experience/*.md`: one file per role (the two files there are placeholders).
-5. `src/content/skills.json`: bands of technical skills and three or four plain sentences.
+4. `src/content/experience/*.md`: one file per role; `src/content/education/*.md`: one file per degree (score = label + value).
+5. `src/content/skills.json`: bands of technical skills (soft skills deferred; to be revisited at the very end).
+5b. `src/content/certificates.json`: title, issuer, id and verify URL (the seal art is generated from the id).
+5c. Each project carries `icon` (a Phosphor regular icon name from `src/lib/picto.ts`) and an optional `year`; the icon becomes the particle pictogram beside the row on desktop.
 6. `src/assets/portrait.jpg` (square-ish, good contrast), then `npm run dither`.
 7. `public/resume.pdf`.
 
