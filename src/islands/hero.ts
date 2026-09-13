@@ -69,12 +69,13 @@ export function mountHero({ state, field }: { state: FieldState; field: Field | 
           const r = button.getBoundingClientRect();
           return e instanceof PointerEvent ? [e.clientX, e.clientY] : [r.left + r.width / 2, r.top + r.height / 2];
         };
+        const SPEED = 640; // css px per second: a front you can watch cross the face, not a cut
         const show = (e: Event) => {
           const [x, y] = pointOf(e) as [number, number];
           const max = origin(x, y);
           button.classList.add('is-hot');
           tween?.kill();
-          tween = gsap.to(state, { waveR: max, duration: 0.6, ease: 'power2.out', onUpdate: () => setR(state.waveR) });
+          tween = gsap.to(state, { waveR: max, duration: (max - state.waveR) / SPEED, ease: 'sine.out', onUpdate: () => setR(state.waveR) });
         };
         const hide = (e: Event) => {
           if (button.getAttribute('aria-pressed') === 'true') return; // pinned by a click
@@ -83,8 +84,8 @@ export function mountHero({ state, field }: { state: FieldState; field: Field | 
           tween?.kill();
           tween = gsap.to(state, {
             waveR: 0,
-            duration: 0.5,
-            ease: 'power2.in',
+            duration: state.waveR / SPEED,
+            ease: 'sine.in',
             onUpdate: () => setR(state.waveR),
             onComplete: () => button.classList.remove('is-hot'),
           });
