@@ -35,7 +35,11 @@ export function sampleName(el: HTMLElement, count: number): { points: Float32Arr
   if ('letterSpacing' in ctx) (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = cs.letterSpacing;
 
   // greedy word wrap at the element width, the same rule the browser applies to plain text
-  const words = (el.textContent ?? '').trim().split(/\s+/);
+  let text = (el.textContent ?? '').trim();
+  if (cs.textTransform === 'uppercase') text = text.toUpperCase();
+  else if (cs.textTransform === 'lowercase') text = text.toLowerCase();
+  const centred = cs.textAlign === 'center';
+  const words = text.split(/\s+/);
   const lines: string[] = [];
   let cur = '';
   for (const word of words) {
@@ -46,7 +50,10 @@ export function sampleName(el: HTMLElement, count: number): { points: Float32Arr
     } else cur = test;
   }
   if (cur) lines.push(cur);
-  lines.forEach((ln, i) => ctx.fillText(ln, 0, i * lineHeight + (lineHeight - fontSize) / 2 + fontSize * 0.8));
+  lines.forEach((ln, i) => {
+    const x = centred ? Math.max(0, (w - ctx.measureText(ln).width) / 2) : 0;
+    ctx.fillText(ln, x, i * lineHeight + (lineHeight - fontSize) / 2 + fontSize * 0.8);
+  });
 
   const data = ctx.getImageData(0, 0, w, h).data;
   const mask = new Uint8Array(w * h);

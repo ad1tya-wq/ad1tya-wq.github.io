@@ -2,42 +2,55 @@
 import { site } from '../content/site';
 ---
 <section id="top" class="section hero" data-chapter="top" aria-labelledby="hero-name">
-  <div class="col hero__col">
-    <h1 id="hero-name" class="hero__name" data-name>{site.name}</h1>
-    <p class="hero__title mono">{site.title}</p>
-    <p class="hero__line">{site.line}</p>
-    <a class="link" href="#projects">Projects</a>
-  </div>
-  <div class="hero__portrait">
-    <slot name="portrait" />
+  <h1 id="hero-name" class="hero__name" data-name>{site.name}</h1>
+  <div class="hero__row">
+    <div class="col hero__col">
+      <p class="hero__title mono">{site.title}</p>
+      <p class="hero__line">{site.line}</p>
+      <a class="link" href="#projects">Projects</a>
+    </div>
+    <div class="hero__portrait">
+      <slot name="portrait" />
+    </div>
   </div>
 </section>
 
 <style>
   .hero {
+    overflow: clip;
     min-height: 100dvh;
     display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    padding-top: calc(var(--s-6) + 44px);
+    grid-template-rows: auto 1fr;
+    align-content: start;
+    row-gap: clamp(var(--s-4), 8vh, var(--s-6));
+    padding-top: calc(var(--s-5) + 44px);
   }
-  .hero__col { width: min(100%, 54vw, 720px); }
+  /* the masthead: one line, spanning the width, uppercase Syne */
   .hero__name {
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: var(--fs-name);
+    font-size: clamp(2.25rem, 8.6vw, 10rem);
     line-height: 0.9;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    text-align: center;
+    white-space: nowrap;
     color: var(--core);
     transition: opacity 400ms var(--ease-out);
   }
   .hero__name.is-assembled { opacity: 0; }
-  .hero__title { margin-top: var(--s-3); font-size: var(--fs-mono); }
+  .hero__row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    column-gap: var(--s-4);
+  }
+  .hero__col { width: min(100%, 560px); }
+  .hero__title { font-size: var(--fs-mono); }
   .hero__line { margin-top: var(--s-2); max-width: 44ch; }
   .hero__col > .link { display: inline-block; margin-top: var(--s-4); }
-  .hero__portrait { align-self: start; margin-top: var(--s-3); }
   @media (max-width: 767px) {
-    .hero { grid-template-columns: 1fr; align-content: start; row-gap: var(--s-4); }
+    .hero__row { grid-template-columns: 1fr; row-gap: var(--s-4); }
     .hero__portrait { order: -1; width: 120px; }
   }
 </style>

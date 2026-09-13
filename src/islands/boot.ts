@@ -5,7 +5,6 @@ import { mountTopNav } from './nav/topNav';
 import { mountProjectsHover } from './projectsHover';
 import { mountReveals } from './reveals';
 import { mountHero } from './hero';
-import { mountModes } from './modes';
 import { mountPointer } from './pointer';
 import { mountToy } from './toy';
 
@@ -29,7 +28,6 @@ export const scroll = mountScroll({
 });
 
 mountHero({ state, field });
-export const modes = mountModes({ state, reducedMotion });
 export const pointer = mountPointer({ state });
 mountToy({ state, field, pointer, reducedMotion });
 mountProjectsHover({ state });

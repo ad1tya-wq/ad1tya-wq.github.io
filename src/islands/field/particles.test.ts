@@ -35,7 +35,7 @@ describe('generateParticles', () => {
     expect(p.ejecta.length).toBe(4 * n);
     expect(p.disk.length).toBe(4 * n);
     expect(p.fragment.length).toBe(n);
-    expect(p.nameSlots).toBe(Math.round(0.55 * n));
+    expect(p.nameSlots).toBe(Math.round(0.62 * n));
   });
 
   it('keeps star points inside the unit sphere, weighted to the surface', () => {

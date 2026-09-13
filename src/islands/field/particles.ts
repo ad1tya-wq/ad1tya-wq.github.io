@@ -66,7 +66,7 @@ export function generateParticles(count: number, projectCount: number, seed = 13
     disk: new Float32Array(4 * count),
     fragment: new Float32Array(count),
     ship: new Float32Array(3 * count).fill(-1),
-    nameSlots: Math.round(0.55 * count),
+    nameSlots: Math.round(0.62 * count),
   };
 
   // spacecraft: hull points by rejection sampling, exhaust points trailing behind the nozzle

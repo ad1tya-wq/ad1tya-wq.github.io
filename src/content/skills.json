@@ -1,13 +1,14 @@
 {
   "bands": [
-    { "name": "Languages", "items": ["Python", "TypeScript", "Java", "Kotlin", "SQL"] },
-    { "name": "Frameworks", "items": ["LangGraph", "React", "Astro", "Android"] },
-    { "name": "Data and ML", "items": ["scikit-learn", "Prophet", "Conformal prediction", "RAG"] },
-    { "name": "Tools", "items": ["Docker", "Jenkins", "Ansible", "Git", "Grafana"] }
+    { "name": "Languages", "items": ["Python", "Java", "C and C++", "SQL", "HTML and CSS"] },
+    { "name": "ML and data", "items": ["PyTorch", "LightGBM", "XGBoost", "SHAP", "scikit-learn", "Pandas"] },
+    { "name": "LLM and agents", "items": ["LangChain", "LangGraph", "RAG", "ChromaDB", "Meta Prophet", "Docling"] },
+    { "name": "Backend and web", "items": ["FastAPI", "Streamlit", "MySQL"] },
+    { "name": "AppSec tooling", "items": ["OWASP ZAP", "SonarQube", "Trivy", "SAST, DAST, SCA"] }
   ],
   "soft": [
     "I write down the failure modes before I write the code.",
     "I would rather ship a small, proven thing than a large, promised one.",
-    "I explain trade-offs in plain language to the people who will live with them."
+    "I have run rooms of 600 and hackathons of 800; logistics do not scare me."
   ]
 }

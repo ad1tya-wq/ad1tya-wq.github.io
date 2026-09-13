@@ -1,7 +1,7 @@
 ---
-title: Stock tracker pipeline
-summary: A small Java stock tracker used to build a Jenkins, Maven, Ansible, Docker and Grafana delivery pipeline.
-stack: [Java, Jenkins, Docker, Ansible, Grafana]
+title: Jenkins delivery pipeline
+summary: "End-to-end CI/CD around a small Java app: Jenkins builds with Maven and JUnit, Ansible ships Docker images, Grafana watches it run."
+stack: [Jenkins, Maven, JUnit, Ansible, Docker, Graphite, Grafana]
 repo: https://github.com/ad1tya-wq/stocktracker
 order: 7
 ---

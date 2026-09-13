@@ -1,11 +1,10 @@
 export const site = {
-  // TODO(user): replace name and title before launch; everything else reads from here
-  name: 'Your Name',
-  title: 'software engineer',
-  line: 'I build systems that decide what to trust: security triage, ML, and the tools around them.',
+  name: 'Aditya Sahu',
+  title: 'machine learning and application security',
+  line: 'Final-year CS undergrad working where machine learning meets application security: vulnerability triage pipelines and agentic RAG systems.',
   email: 'sahu200431@gmail.com',
   github: 'https://github.com/ad1tya-wq',
-  linkedin: 'https://www.linkedin.com/in/', // TODO(user): full profile URL
+  linkedin: 'https://linkedin.com/in/aditya-sahu-b2539a331',
   resume: '/resume.pdf',
 } as const;
 

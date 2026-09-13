@@ -46,7 +46,7 @@ export function createField(canvas: HTMLCanvasElement, { state, projectCount }: 
   let vw = window.innerWidth;
   let vh = window.innerHeight;
   const count = particleCount(vw, vh, lowEnd);
-  const nameSlots = Math.round(0.55 * count); // same rule as generateParticles, known before the buffers arrive
+  const nameSlots = Math.round(0.62 * count); // same rule as generateParticles, known before the buffers arrive
   let particles: ParticleBuffers | null = null;
   let pendingName: Float32Array | null = null;
 
