@@ -7,6 +7,7 @@ in vec3 aStar;      // point in the unit sphere, weighted to the surface
 in vec4 aEjecta;    // xyz unit direction, w speed factor 0.6..1.4
 in vec4 aDisk;      // x radius in r_s (3..12), y phase, z vertical jitter, w 1 = falls back
 in float aFragment; // project index
+in vec3 aShip;      // ship-local x, y; z = 0 hull, (0,1] exhaust age, -1 not on the ship
 
 uniform vec2 uResolution;   // css px
 uniform float uDpr;
@@ -104,6 +105,23 @@ void main() {
   float isHover = step(0.5, 1.0 - abs(aFragment - uHover)) * step(0.0, uHover) * wEject * (1.0 - wRem);
   px = mix(px, vec2(uAnchor.x, uHoverY), 0.15 * isHover);
 
+  // ---- spacecraft flyby during Projects and Skills: a gravity assist under the remnant ----
+  float isShip = step(-0.5, aShip.z);
+  float wShip = ss(0.28, 0.31, p) * (1.0 - ss(0.65, 0.68, p));
+  float su = clamp((p - 0.29) / 0.38, 0.0, 1.0);
+  float st = pow(su, 1.8);                                     // slow approach across Projects, periapsis at p = 0.55, fast exit in Skills
+  vec2 P0 = vec2(0.04 * uResolution.x, uAnchor.y + 0.42 * uResolution.y);
+  vec2 P1 = uAnchor + vec2(-0.35 * uRadius, 1.9 * uRadius);
+  vec2 P2 = vec2(1.12 * uResolution.x, uAnchor.y - 0.48 * uResolution.y);
+  vec2 shipPos = mix(mix(P0, P1, st), mix(P1, P2, st), st);
+  vec2 heading = normalize(mix(P1 - P0, P2 - P1, st));
+  vec2 across = vec2(-heading.y, heading.x);
+  float shipLen = clamp(0.5 * uRadius, 40.0, 90.0);
+  float flicker = 1.0 + 0.15 * sin(uTime * 23.0 + aSeed.x * 40.0) * step(0.001, aShip.z);
+  vec2 shipPx = shipPos + heading * (aShip.x * shipLen) + across * (aShip.y * shipLen * flicker);
+  float shipW = isShip * wShip;
+  px = mix(px, shipPx, shipW);
+
   // ---- pointer force (stateless spring) ----
   vec2 d = px - uPointer;
   float dist = length(d) + 1e-3;
@@ -113,8 +131,8 @@ void main() {
   float cosT = clamp(aStar.z / max(length(aStar), 1e-3), 0.0, 1.0);
   float bStar = (1.0 - 0.6 * (1.0 - cosT)) * (1.0 - 0.4 * wCollapse);
   float flash = 3.0 * wBreak * (1.0 - ss(0.20, 0.26, p));
-  float bEject = 6.0 / (Rej * Rej) + 0.5 * step(1.2, aEjecta.w);   // fades as R^-2, outer shell brighter
-  float bRem = 0.22;
+  float bEject = 3.6 / Rej + 0.5 * step(1.2, aEjecta.w);           // fades with distance, outer shell brighter
+  float bRem = 0.4;
   float beta = 0.35 * pow(aDisk.x / 3.0, -0.5);                     // faster inside means stronger beaming
   float bDisk = (0.9 * (3.0 / aDisk.x) + 0.15) * pow(1.0 + beta * cos(ang), 3.0);
 
@@ -125,12 +143,15 @@ void main() {
   b = mix(b, mix(bRem * 0.3, bDisk, falls), wHole);
   b = mix(b, 0.9, nameW);
   b *= mix(1.0, 2.0, isHover);
+  float bShip = mix(1.1, 0.9 * (1.0 - aShip.z) * flicker, step(0.001, aShip.z));
+  b = mix(b, bShip, shipW);
 
   // name particles stay invisible until assembly starts (the real h1 carries the name until then)
   float invisibleName = hasName * (1.0 - wStar) * (1.0 - step(0.001, uNameMix));
   vBright = b * (1.0 - invisibleName) * uGain;
 
-  float size = 1.4 + 1.2 * wBreak * (1.0 - ss(0.20, 0.26, p)) + 0.6 * falls * wHole;
+  float size = 1.4 + 1.2 * wBreak * (1.0 - ss(0.20, 0.26, p)) + 0.5 * wEject * (1.0 - wFall) + 0.6 * falls * wHole;
+  size = mix(size, 1.7 - 0.5 * aShip.z, shipW);
 
   vec2 clip = (px / uResolution) * 2.0 - 1.0;
   clip.y = -clip.y;

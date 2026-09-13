@@ -36,7 +36,24 @@ export interface ParticleBuffers {
   ejecta: Float32Array;
   disk: Float32Array;
   fragment: Float32Array;
+  /** xyz per particle: ship-local x (along heading), y (across), z = 0 hull, (0,1] exhaust age, -1 not part of the ship */
+  ship: Float32Array;
   nameSlots: number;
+}
+
+/** Particles that form the spacecraft: the first SHIP_HULL are hull, the next SHIP_EXHAUST are exhaust. */
+export const SHIP_HULL = 360;
+export const SHIP_EXHAUST = 240;
+export const SHIP_COUNT = SHIP_HULL + SHIP_EXHAUST;
+
+/** Delta-wing dart in local coordinates: nose at x = 0.5, tail at x = -0.5, half-height 0.22. */
+export function inShip(x: number, y: number): boolean {
+  if (x < -0.5 || x > 0.5) return false;
+  const body = 0.1 * (0.5 - x);
+  const fin = x < -0.1 ? 0.22 * ((-0.1 - x) / 0.4) : 0;
+  if (Math.abs(y) > Math.max(body, fin)) return false;
+  if (x < -0.45 && Math.abs(y) < 0.04) return false; // engine nozzle gap
+  return true;
 }
 
 export function generateParticles(count: number, projectCount: number, seed = 1337): ParticleBuffers {
@@ -48,8 +65,29 @@ export function generateParticles(count: number, projectCount: number, seed = 13
     ejecta: new Float32Array(4 * count),
     disk: new Float32Array(4 * count),
     fragment: new Float32Array(count),
+    ship: new Float32Array(3 * count).fill(-1),
     nameSlots: Math.round(0.55 * count),
   };
+
+  // spacecraft: hull points by rejection sampling, exhaust points trailing behind the nozzle
+  const shipCount = Math.min(SHIP_COUNT, count);
+  for (let i = 0; i < shipCount; i++) {
+    if (i < SHIP_HULL) {
+      let x = 0, y = 0;
+      do {
+        x = rnd() - 0.5;
+        y = (rnd() - 0.5) * 0.5;
+      } while (!inShip(x, y));
+      out.ship[3 * i] = x;
+      out.ship[3 * i + 1] = y;
+      out.ship[3 * i + 2] = 0;
+    } else {
+      const age = Math.pow(rnd(), 1.6); // dense near the nozzle, sparse far behind
+      out.ship[3 * i] = -0.55 - 1.8 * age;
+      out.ship[3 * i + 1] = (rnd() - 0.5) * (0.06 + 0.16 * age);
+      out.ship[3 * i + 2] = 0.02 + 0.98 * age;
+    }
+  }
   const TAU = Math.PI * 2;
 
   for (let i = 0; i < count; i++) {

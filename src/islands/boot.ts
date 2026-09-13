@@ -29,3 +29,8 @@ mountReveals({ reducedMotion });
 
 // ScrollTrigger measures once fonts and images are in
 document.fonts.ready.then(() => scroll.refresh());
+
+if (import.meta.env.DEV) {
+  // dev-only handle for inspecting lifecycle states from the console
+  (window as unknown as { __portfolio: unknown }).__portfolio = { state, field };
+}

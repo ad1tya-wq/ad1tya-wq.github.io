@@ -305,3 +305,9 @@ After plan approval the spec is copied into the repo at `docs/superpowers/specs/
 - After approval: write the standing preference (commit identity, no co-author trailer, frequent pushes) to memory, copy this spec into the repo, then write the task-level implementation plan.
 
 Decisions confirmed by the user: Direction 3 "Singularity"; full dark acceptable if restrained; treated (dithered) portrait; sections About / Projects / Skills / Experience / Contact + resume; physics toy now, Battleship later; Astro + TypeScript; GitHub Pages now, custom domain later.
+
+## Addendum (2026-09-13): spacecraft flyby
+
+User feedback after the first build: the field changed too little between Projects and Skills. Addition: 600 of the particles (360 hull, 240 exhaust) form a small delta-wing spacecraft that crosses the screen during progress 0.28-0.68. It enters lower-left at the start of Projects, approaches slowly, swings closest to the remnant at p = 0.55 (the Projects/Skills boundary) and exits upper-right fast: a gravity assist that foreshadows the slingshot toy in Horizon. The path is a quadratic Bezier with the control point just below the object; timing is `t = u^1.8` so speed rises toward periapsis. Like everything else it is keyframed by scroll in the vertex shader (attribute `aShip`), so it is reversible and costs nothing per frame; exhaust particles flicker with `uTime` and fade with age. Outside the window those particles behave as ordinary ejecta.
+
+Brightness tuning from the same review: ejecta brightness is `3.6 / R` (not `R^-2`), remnant 0.4, ejecta point size +0.5 px, so the expansion reads as a filamentary cloud rather than a few dim dots.

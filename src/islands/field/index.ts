@@ -60,6 +60,7 @@ export function createField(canvas: HTMLCanvasElement, { state, projectCount }: 
   attribute(gl, pointsProg, 'aEjecta', particles.ejecta, 4);
   attribute(gl, pointsProg, 'aDisk', particles.disk, 4);
   attribute(gl, pointsProg, 'aFragment', particles.fragment, 1);
+  attribute(gl, pointsProg, 'aShip', particles.ship, 3);
   const nameData = new Float32Array(2 * count).fill(-1);
   const nameBuf = attribute(gl, pointsProg, 'aName', nameData, 2, gl.DYNAMIC_DRAW);
   gl.bindVertexArray(null);

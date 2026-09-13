@@ -88,3 +88,29 @@ describe('generateParticles', () => {
     expect(Array.from(q.star)).toEqual(Array.from(r.star));
   });
 });
+
+describe('spacecraft particles', () => {
+  it('reserves the first SHIP_COUNT particles for the hull and exhaust, sentinel elsewhere', async () => {
+    const { SHIP_COUNT, SHIP_HULL, inShip } = await import('./particles');
+    const p = generateParticles(2000, 7, 42);
+    expect(p.ship.length).toBe(3 * 2000);
+    for (let i = 0; i < SHIP_HULL; i++) {
+      expect(p.ship[3 * i + 2]).toBe(0);
+      expect(inShip(p.ship[3 * i]!, p.ship[3 * i + 1]!)).toBe(true);
+    }
+    for (let i = SHIP_HULL; i < SHIP_COUNT; i++) {
+      expect(p.ship[3 * i]).toBeLessThan(-0.5);
+      expect(p.ship[3 * i + 2]).toBeGreaterThan(0);
+      expect(p.ship[3 * i + 2]).toBeLessThanOrEqual(1);
+    }
+    for (let i = SHIP_COUNT; i < 2000; i++) expect(p.ship[3 * i + 2]).toBe(-1);
+  });
+  it('inShip describes a dart: nose at the front, wider fins at the back, a nozzle gap', async () => {
+    const { inShip } = await import('./particles');
+    expect(inShip(0.45, 0)).toBe(true);
+    expect(inShip(0.45, 0.05)).toBe(false);
+    expect(inShip(-0.4, 0.15)).toBe(true);
+    expect(inShip(-0.48, 0.0)).toBe(false);
+    expect(inShip(0.6, 0)).toBe(false);
+  });
+});
