@@ -311,3 +311,11 @@ Decisions confirmed by the user: Direction 3 "Singularity"; full dark acceptable
 User feedback after the first build: the field changed too little between Projects and Skills. Addition: 600 of the particles (360 hull, 240 exhaust) form a small delta-wing spacecraft that crosses the screen during progress 0.28-0.68. It enters lower-left at the start of Projects, approaches slowly, swings closest to the remnant at p = 0.55 (the Projects/Skills boundary) and exits upper-right fast: a gravity assist that foreshadows the slingshot toy in Horizon. The path is a quadratic Bezier with the control point just below the object; timing is `t = u^1.8` so speed rises toward periapsis. Like everything else it is keyframed by scroll in the vertex shader (attribute `aShip`), so it is reversible and costs nothing per frame; exhaust particles flicker with `uTime` and fade with age. Outside the window those particles behave as ordinary ejecta.
 
 Brightness tuning from the same review: ejecta brightness is `3.6 / R` (not `R^-2`), remnant 0.4, ejecta point size +0.5 px, so the expansion reads as a filamentary cloud rather than a few dim dots.
+
+## Addendum (2026-09-13, evening): cover hero and content
+
+- Hero is now the "Cover" layout chosen by the user: the name spans the viewport as an uppercase Syne 800 masthead, the cut-out dithered portrait stands centred in front of the letters' lower third with the bust on the section's bottom edge, details sit bottom-left. On mobile the name wraps to two lines and the portrait is sized by width. The particle name still assembles on the letters and streams into the star.
+- Portrait pipeline: `src/assets/portrait.png` is a background-removed cutout (rembg, isnet-general-use, largest blob kept); `scripts/dither.ts` preserves transparency and also emits a half-size dither used via `srcset` so the 1-bit pattern is never downscaled.
+- The mode toggle was removed at the user's request; the nav covers navigation.
+- WebGL context loss now hides the canvas, paints the poster on `body`, and rebuilds the renderer on `webglcontextrestored` (a dead opaque canvas otherwise composites white).
+- Content comes from the resume: Aditya Sahu; ML and application security; Caze Labs, IEEE-SSIT, VIT; Data Forge added, sepsis dashboard removed, the stock tracker reframed as the Jenkins delivery pipeline.
