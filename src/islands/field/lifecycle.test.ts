@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CHAPTERS, MODE_TARGETS, chapterAt, chapterProgress, clamp01, damp, lerp, smoothstep } from './lifecycle';
+import { CHAPTERS, MODE_TARGETS, chapterAt, chapterProgress, clamp01, damp, holeRadiusPx, lerp, smoothstep } from './lifecycle';
 
 describe('CHAPTERS', () => {
   it('tile [0, 1] contiguously in spec order', () => {
@@ -57,5 +57,16 @@ describe('math helpers', () => {
     expect(chapterAt(MODE_TARGETS.nova)).toBe('about');
     expect(chapterAt(MODE_TARGETS.remnant)).toBe('skills');
     expect(chapterAt(MODE_TARGETS.horizon)).toBe('horizon');
+  });
+});
+
+describe('holeRadiusPx', () => {
+  it('is zero before the horizon chapter and R * 0.16 once formed', () => {
+    expect(holeRadiusPx(0.5, 150)).toBe(0);
+    expect(holeRadiusPx(0.82, 150)).toBe(0);
+    expect(holeRadiusPx(0.9, 150)).toBeCloseTo(24);
+    expect(holeRadiusPx(1, 150)).toBeCloseTo(24);
+    expect(holeRadiusPx(0.86, 150)).toBeGreaterThan(0);
+    expect(holeRadiusPx(0.86, 150)).toBeLessThan(24);
   });
 });

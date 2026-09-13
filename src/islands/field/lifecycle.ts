@@ -44,3 +44,8 @@ export function chapterAt(progress: number): ChapterId {
   for (const c of CHAPTERS) if (p < c.end) return c.id;
   return 'contact';
 }
+
+/** Schwarzschild radius on screen: 0 until the hole starts forming at 0.82, full at 0.90. */
+export function holeRadiusPx(progress: number, starRadiusPx: number): number {
+  return starRadiusPx * 0.16 * smoothstep(0.82, 0.9, progress);
+}

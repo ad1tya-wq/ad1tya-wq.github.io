@@ -1,6 +1,6 @@
 import { attribute, createFbo, createProgram, uniforms } from './gl';
 import { computeAnchor, particleCount, textRectOf } from './layout';
-import { damp } from './lifecycle';
+import { damp, holeRadiusPx } from './lifecycle';
 import { generateParticles } from './particles';
 import type { FieldState } from './state';
 import { showPoster } from './fallback';
@@ -136,7 +136,7 @@ export function createField(canvas: HTMLCanvasElement, { state, projectCount }: 
     gl.uniform2f(cu.uResolution, vw, vh);
     gl.uniform1f(cu.uDpr, dpr);
     gl.uniform2f(cu.uHole, anchor.x, anchor.y);
-    gl.uniform1f(cu.uRsPx, 0); // the hole forms in Task 9
+    gl.uniform1f(cu.uRsPx, holeRadiusPx(state.progress, anchor.r));
     gl.uniform4f(cu.uTextRect, state.textRect[0], state.textRect[1], state.textRect[2], state.textRect[3]);
     gl.uniform1f(cu.uExposure, 0.9);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
