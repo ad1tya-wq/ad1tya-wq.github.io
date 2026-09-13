@@ -1,6 +1,6 @@
 import { attribute, createFbo, createProgramDeferred, uniforms } from './gl';
 import { computeAnchor, particleCount, textRectOf } from './layout';
-import { damp, holeRadiusPx, lerp, smoothstep } from './lifecycle';
+import { damp, holeRadiusPx, lerp, massScale, smoothstep } from './lifecycle';
 import { generateParticles, SHIP_COUNT, type ParticleBuffers } from './particles';
 import type { FieldState } from './state';
 import { hidePoster, showPoster } from './fallback';
@@ -22,6 +22,17 @@ export interface Field {
   readonly nameSlots: number;
   readonly faceSlots: number;
   readonly pictoSlots: number;
+  /** particles at the end of the buffer reserved for text the hole eats */
+  readonly eatSlots: number;
+  /** seconds on the shader clock (uTime), for timing eaten-text flights */
+  now(): number;
+  /**
+   * Assigns pool slots [from, from + pts.length / 2) to text points (document css px pairs) that start flying
+   * at `start` (shader seconds); dir 1 = into the hole, -1 = back out to the text.
+   */
+  setEat(from: number, pts: Float32Array, start: number, dir: 1 | -1): void;
+  /** Releases pool slots [from, to). */
+  clearEat(from: number, to: number): void;
   /** points (0..1 in the pictogram box) for one project's cluster */
   setPictoPoints(fragment: number, pts: Float32Array): void;
   setPictoBox(x: number, y: number, w: number, h: number): void;
@@ -39,7 +50,7 @@ export interface FieldOptions {
   projectCount: number;
 }
 
-const POINT_UNIFORMS = ['uResolution', 'uDpr', 'uProgress', 'uTime', 'uAnchor', 'uRadius', 'uNameBox', 'uNameMix', 'uFaceBox', 'uFaceMix', 'uWave', 'uActiveFragment', 'uPictoBox', 'uPictoMix', 'uPointer', 'uPointerForce', 'uHover', 'uHoverY', 'uDiskScale', 'uGain'] as const;
+const POINT_UNIFORMS = ['uResolution', 'uDpr', 'uProgress', 'uTime', 'uAnchor', 'uRadius', 'uNameBox', 'uNameMix', 'uFaceBox', 'uFaceMix', 'uWave', 'uActiveFragment', 'uPictoBox', 'uPictoMix', 'uPointer', 'uPointerForce', 'uHover', 'uHoverY', 'uDiskScale', 'uGain', 'uMass', 'uScroll', 'uEatenNameFace'] as const;
 const COMPOSITE_UNIFORMS = ['uScene', 'uResolution', 'uDpr', 'uHole', 'uRsPx', 'uTextRect', 'uExposure'] as const;
 
 /** Creates the field and rebuilds it transparently if the WebGL context is lost and later restored. */
@@ -54,6 +65,7 @@ export function createField(canvas: HTMLCanvasElement, opts: FieldOptions): Fiel
   let lastColumn: Element | null = null;
   let lastProbe: Float32Array | null = null;
   const lastPicto = new Map<number, Float32Array>();
+  const lastEat = new Map<number, { pts: Float32Array; start: number; dir: 1 | -1 }>();
   let lastPictoBox: [number, number, number, number] | null = null;
   const onRestored = () => {
     inner?.destroy();
@@ -68,6 +80,7 @@ export function createField(canvas: HTMLCanvasElement, opts: FieldOptions): Fiel
     inner.setProbe(lastProbe);
     const restored = inner;
     lastPicto.forEach((pts, f) => restored.setPictoPoints(f, pts));
+    lastEat.forEach((e, from) => restored.setEat(from, e.pts, e.start, e.dir));
     if (lastPictoBox) inner.setPictoBox(...lastPictoBox);
   };
   canvas.addEventListener('webglcontextrestored', onRestored);
@@ -75,6 +88,16 @@ export function createField(canvas: HTMLCanvasElement, opts: FieldOptions): Fiel
     nameSlots: inner.nameSlots,
     faceSlots: inner.faceSlots,
     pictoSlots: inner.pictoSlots,
+    eatSlots: inner.eatSlots,
+    now: () => inner?.now() ?? 0,
+    setEat(from, pts, start, dir) {
+      lastEat.set(from, { pts, start, dir });
+      inner?.setEat(from, pts, start, dir);
+    },
+    clearEat(from, to) {
+      lastEat.forEach((_, k) => k >= from && k < to && lastEat.delete(k));
+      inner?.clearEat(from, to);
+    },
     setPictoPoints(f, pts) {
       lastPicto.set(f, pts);
       inner?.setPictoPoints(f, pts);
@@ -131,6 +154,8 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
   const count = particleCount(vw, vh, lowEnd);
   const nameSlots = Math.round(0.42 * count); // same rules as generateParticles, known before the buffers arrive
   const faceSlots = Math.round(0.38 * count);
+  const eatSlots = Math.round(0.2 * count); // the last 20 %: ordinary particles until the hole eats text
+  const eatOffset = count - eatSlots;
   let particles: ParticleBuffers | null = null;
   let pendingName: Float32Array | null = null;
   let pendingFace: Float32Array | null = null;
@@ -157,6 +182,30 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
   const faceData = new Float32Array(2 * count).fill(-1);
   let faceBuf: WebGLBuffer | null = null;
   let faceBox: [number, number, number, number] = [0, 0, 0, 0];
+  const eatData = new Float32Array(4 * count).fill(-1); // docX, docY, start (-1 = free), lag (+2 when flying back out)
+  let eatBuf: WebGLBuffer | null = null;
+  const pendingEat: Array<[number, Float32Array, number, 1 | -1]> = [];
+
+  function uploadEat(from: number, pts: Float32Array, start: number, dir: 1 | -1) {
+    const n = Math.min(pts.length / 2, eatSlots - from);
+    for (let k = 0; k < n; k++) {
+      const i = eatOffset + from + k;
+      eatData[4 * i] = pts[2 * k]!;
+      eatData[4 * i + 1] = pts[2 * k + 1]!;
+      eatData[4 * i + 2] = start;
+      eatData[4 * i + 3] = ((k * 0.618034) % 1) + (dir < 0 ? 2 : 0); // golden-ratio lag spreads a word into a streak
+    }
+    flushEat(from, from + n);
+  }
+  function releaseEat(from: number, to: number) {
+    for (let i = eatOffset + from; i < eatOffset + to; i++) eatData[4 * i + 2] = -1;
+    flushEat(from, to);
+  }
+  function flushEat(from: number, to: number) {
+    if (!eatBuf || to <= from) return;
+    gl.bindBuffer(gl.ARRAY_BUFFER, eatBuf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 16 * (eatOffset + from), eatData.subarray(4 * (eatOffset + from), 4 * (eatOffset + to)));
+  }
   const pictoData = new Float32Array(2 * count).fill(-1);
   let pictoBuf: WebGLBuffer | null = null;
   let pictoBox: [number, number, number, number] = [0, 0, 0, 0];
@@ -212,6 +261,7 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
     nameBuf = attribute(gl, pointsProg, 'aName', nameData, 2, gl.DYNAMIC_DRAW);
     faceBuf = attribute(gl, pointsProg, 'aFace', faceData, 2, gl.DYNAMIC_DRAW);
     pictoBuf = attribute(gl, pointsProg, 'aPicto', pictoData, 2, gl.DYNAMIC_DRAW);
+    eatBuf = attribute(gl, pointsProg, 'aEat', eatData, 4, gl.DYNAMIC_DRAW);
     gl.bindVertexArray(null);
     // the first PICTO_SLOTS non-ship particles of each project's ejecta sector can form its pictogram
     const perFragment = new Map<number, number[]>();
@@ -228,6 +278,8 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
     pendingFace = null;
     pendingPicto.forEach((pts, f) => uploadPicto(f, pts));
     pendingPicto.clear();
+    pendingEat.forEach(([from, pts, start, dir]) => uploadEat(from, pts, start, dir));
+    pendingEat.length = 0;
   }
 
   // generate off the main thread; fall back to inline generation if workers are unavailable
@@ -277,8 +329,10 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
   let lastRenderedProgress = -1;
   const t0 = last;
 
+  const clock = (now: number) => (state.reducedMotion ? 0 : (now - t0) / 1000);
   function render(now: number) {
-    const time = state.reducedMotion ? 0 : (now - t0) / 1000;
+    const time = clock(now);
+    const scale = massScale(state.mass);
     state.textRect = textRectOf(column);
     // on desktop the object drifts from 62vw to the centre as the hole forms, so Horizon and Contact sit on it
     const centred = vw >= 768 ? lerp(anchor.x, vw * 0.5, smoothstep(0.8, 0.86, state.progress)) : anchor.x;
@@ -310,8 +364,11 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
     gl.uniform1f(pu.uPointerForce, state.force);
     gl.uniform1f(pu.uHover, state.hover);
     gl.uniform1f(pu.uHoverY, state.hoverY);
-    gl.uniform1f(pu.uDiskScale, anchor.r * 0.16);
+    gl.uniform1f(pu.uDiskScale, anchor.r * 0.16 * scale);
     gl.uniform1f(pu.uGain, gain);
+    gl.uniform1f(pu.uMass, state.mass);
+    gl.uniform1f(pu.uScroll, window.scrollY);
+    gl.uniform2f(pu.uEatenNameFace, state.nameEaten, state.faceEaten);
     if (particles) gl.drawArrays(gl.POINTS, 0, particles.count);
     if (probe && probe.length >= 2 && probeBuf) {
       gl.useProgram(probeProg);
@@ -335,7 +392,7 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
     gl.uniform2f(cu.uResolution, vw, vh);
     gl.uniform1f(cu.uDpr, dpr);
     gl.uniform2f(cu.uHole, centred, anchor.y);
-    gl.uniform1f(cu.uRsPx, holeRadiusPx(state.progress, anchor.r));
+    gl.uniform1f(cu.uRsPx, holeRadiusPx(state.progress, anchor.r) * scale);
     gl.uniform4f(cu.uTextRect, state.textRect[0], state.textRect[1], state.textRect[2], state.textRect[3]);
     gl.uniform1f(cu.uExposure, 0.9);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -395,6 +452,18 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
     nameSlots,
     faceSlots,
     pictoSlots: PICTO_SLOTS,
+    eatSlots,
+    now: () => clock(performance.now()),
+    setEat(from, pts, start, dir) {
+      if (!particles) {
+        pendingEat.push([from, pts, start, dir]);
+        return;
+      }
+      uploadEat(from, pts, start, dir);
+    },
+    clearEat(from, to) {
+      if (particles) releaseEat(from, to);
+    },
     setPictoPoints(fragment, pts) {
       if (!particles) {
         pendingPicto.set(fragment, pts);

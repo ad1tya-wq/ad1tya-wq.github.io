@@ -10,6 +10,7 @@ in float aFragment; // project index
 in vec2 aFace;      // 0..1 inside the portrait box, or (-1,-1) when unassigned
 in vec3 aShip;      // ship-local x, y; z = 0 hull, (0,1] exhaust age, -1 not on the ship
 in vec2 aPicto;     // 0..1 inside the pictogram box for the particle's project, or (-1,-1)
+in vec4 aEat;       // eaten text: document css px, start time (-1 = free), lag 0..1 (+2 when flying back out)
 
 uniform vec2 uResolution;   // css px
 uniform float uDpr;
@@ -31,6 +32,9 @@ uniform float uHover;       // hovered fragment or -1
 uniform float uHoverY;      // css px
 uniform float uDiskScale;   // r_s in css px for disk geometry (R * 0.16)
 uniform float uGain;
+uniform float uMass;        // Horizon mass slider 0..1
+uniform float uScroll;      // window.scrollY, css px (document -> viewport for eaten text)
+uniform vec2 uEatenNameFace;// 1 when the hole has eaten the hero name / the portrait
 
 out float vBright;
 
@@ -149,6 +153,27 @@ void main() {
   float shipW = isShip * wShip;
   px = mix(px, shipPx, shipW);
 
+  // ---- text the hole has eaten: from the glyph, a decaying orbit into the disk; reversed when the mass drops ----
+  float hasEat = step(0.0, aEat.z);
+  float eatLag = fract(aEat.w);
+  float eatOut = step(1.5, aEat.w);
+  float te = clamp((uTime - aEat.z - eatLag * 0.35) / 1.6, 0.0, 1.0);
+  te = mix(te, 1.0 - te, eatOut);
+  vec2 glyph = vec2(aEat.x, aEat.y - uScroll);
+  vec2 rel = glyph - uAnchor;
+  float r0 = length(rel) + 1e-3;
+  float a0 = atan(rel.y, rel.x);
+  float rEnd = aDisk.x * uDiskScale;                          // this particle's own place in the disk
+  float ts = te * te * (3.0 - 2.0 * te);
+  float rE = mix(r0, rEnd, pow(ts, 0.85));
+  float turnsE = 2.0 + 3.0 * (1.0 - rE / r0);                 // faster spin as it gets in (angular momentum)
+  float aE = a0 + ts * turnsE + eatLag * 0.25 * ts;           // lag smears a word along its streamline
+  float squeeze = mix(1.0, TILT_COS, ts);
+  vec2 eatPx = uAnchor + vec2(cos(aE) * rE, sin(aE) * rE * squeeze);
+  vec2 diskPx = uAnchor + pDisk.xy * uRadius;
+  eatPx = mix(eatPx, diskPx, ss(0.75, 1.0, te));              // hand over to the Keplerian disk
+  px = mix(px, eatPx, hasEat);
+
   // ---- pointer force (stateless spring) ----
   vec2 d = px - uPointer;
   float dist = length(d) + 1e-3;
@@ -174,16 +199,20 @@ void main() {
   b = mix(b, 1.5, pictoW);
   float bShip = mix(1.1, 0.9 * (1.0 - aShip.z) * flicker, step(0.001, aShip.z));
   b = mix(b, bShip, shipW);
+  b = mix(b, 1.6 + 0.9 * sin(3.14159 * te) * (1.0 - ss(0.75, 1.0, te)) + (0.9 * (3.0 / aDisk.x) + 0.15) * ss(0.75, 1.0, te), hasEat);
 
   // name particles stay invisible until assembly starts (the real h1 carries the name until then)
   float invisibleName = hasName * (1.0 - wStar) * (1.0 - step(0.001, uNameMix));
   float invisibleFace = hasFace * (1.0 - wStar) * (1.0 - step(0.001, uFaceMix));
-  vBright = b * (1.0 - invisibleName) * (1.0 - invisibleFace) * uGain;
+  float eatenName = uEatenNameFace.x * hasName * (1.0 - wStar);
+  float eatenFace = uEatenNameFace.y * hasFace * (1.0 - wStar);
+  vBright = b * (1.0 - invisibleName) * (1.0 - invisibleFace) * (1.0 - eatenName) * (1.0 - eatenFace) * uGain;
 
   float size = 1.4 + 1.2 * wBreak * (1.0 - ss(0.20, 0.26, p)) + 0.5 * wEject * (1.0 - wFall) + 0.6 * falls * wHole;
   size = mix(size, 1.6, faceW);
   size = mix(size, 1.7, pictoW);
   size = mix(size, 1.7 - 0.5 * aShip.z, shipW);
+  size = mix(size, 1.6, hasEat);
 
   vec2 clip = (px / uResolution) * 2.0 - 1.0;
   clip.y = -clip.y;

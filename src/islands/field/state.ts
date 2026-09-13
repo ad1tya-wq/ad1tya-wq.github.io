@@ -19,6 +19,11 @@ export interface FieldState {
   hover: number;
   /** viewport y (css px) of the hovered row */
   hoverY: number;
+  /** Horizon "mass" slider 0..1: scales the hole (shadow, lensing, disk, toy gravity) and decides which text blocks it has eaten */
+  mass: number;
+  /** 1 while the hole has eaten the hero name / portrait: their resting particles are hidden */
+  nameEaten: number;
+  faceEaten: number;
   /** project whose ejecta cluster currently forms its pictogram, or -1 */
   activeFragment: number;
   /** pictogram assembly 0..1 (tweened when the active project changes) */
@@ -42,6 +47,9 @@ export function createState(reducedMotion: boolean): FieldState {
     force: 0,
     hover: -1,
     hoverY: 0,
+    mass: 0,
+    nameEaten: 0,
+    faceEaten: 0,
     activeFragment: -1,
     pictoMix: 0,
     reducedMotion,

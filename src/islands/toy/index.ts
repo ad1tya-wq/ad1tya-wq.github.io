@@ -2,6 +2,7 @@ import gsap from 'gsap';
 import type { Field } from '../field';
 import { computeAnchor } from '../field/layout';
 import type { FieldState } from '../field/state';
+import { massScale } from '../field/lifecycle';
 import { createProbe, escapeSpeed, predict, stepProbe, type Probe } from './slingshot';
 
 interface ToyDeps {
@@ -12,16 +13,18 @@ interface ToyDeps {
 }
 
 // gm sets the pace: orbital speed scales with sqrt(gm), so 120 gives a flyby of a few seconds on screen
-const CFG = { gm: 120, rs: 1, captureRadius: 1.5, escapeRadius: 40, orbitAfter: 12 };
-const V = Math.sqrt(CFG.gm);
+const BASE = { gm: 120, rs: 1, captureRadius: 1.5, escapeRadius: 40, orbitAfter: 12 };
+const V = Math.sqrt(BASE.gm);
 
-export function mountToy({ field, pointer, reducedMotion }: ToyDeps): void {
+export function mountToy({ state, field, pointer, reducedMotion }: ToyDeps): void {
   const root = document.querySelector<HTMLElement>('[data-toy]');
   const button = root?.querySelector<HTMLButtonElement>('[data-toy-launch]');
   const status = root?.querySelector<HTMLElement>('[data-toy-status]');
   const section = document.getElementById('horizon');
   if (!root || !button || !status || !section || !field) return;
   const statusEl: HTMLElement = status;
+  // the Horizon mass slider makes the same hole heavier for the probe too
+  const cfg = () => ({ ...BASE, gm: BASE.gm * massScale(state.mass) });
 
   let probe: Probe | null = null;
   let angle = 0; // radians, keyboard-adjustable aim
@@ -54,7 +57,7 @@ export function mountToy({ field, pointer, reducedMotion }: ToyDeps): void {
 
   function frame(_time: number, deltaMs: number) {
     if (!probe) return;
-    stepProbe(probe, CFG, Math.min(deltaMs, 50) / 1000);
+    stepProbe(probe, cfg(), Math.min(deltaMs, 50) / 1000);
     // trail then head, in css px
     const cap = probe.trail.length / 2;
     let n = 0;
@@ -89,7 +92,7 @@ export function mountToy({ field, pointer, reducedMotion }: ToyDeps): void {
   /** Shows the path this launch would take as a dotted line (every other predicted step), for `holdMs` if given. */
   function showPreview(x: number, y: number, vx: number, vy: number, holdMs = 0) {
     if (probe && probe.outcome === 'flying') return;
-    const path = predict(x, y, vx, vy, CFG, 480, 1 / 40);
+    const path = predict(x, y, vx, vy, cfg(), 480, 1 / 40);
     let n = 0;
     for (let k = 0; k < path.length / 2 && n < 400; k += 2) toPx(path[2 * k]!, path[2 * k + 1]!, preview, n++);
     field!.setProbe(preview.subarray(0, 2 * n));
@@ -102,7 +105,7 @@ export function mountToy({ field, pointer, reducedMotion }: ToyDeps): void {
   }
   function describe(x: number, y: number, vx: number, vy: number) {
     const v = Math.hypot(vx, vy);
-    const ratio = v / escapeSpeed(Math.hypot(x, y), CFG);
+    const ratio = v / escapeSpeed(Math.hypot(x, y), cfg());
     const deg = Math.round((Math.atan2(-vy, vx) * 180) / Math.PI);
     statusEl.textContent = `Aim ${deg}°, ${ratio.toFixed(2)} × escape speed`;
   }
