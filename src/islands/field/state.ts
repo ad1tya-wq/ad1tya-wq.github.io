@@ -5,6 +5,10 @@ export interface FieldState {
   progress: number;
   /** load-time name assembly, 0..1 */
   nameMix: number;
+  /** 1 once portrait points are uploaded (they sit exactly under the image) */
+  faceMix: number;
+  /** face particle brightness, dips while the real photo is shown on hover */
+  faceReveal: number;
   pointerX: number;
   pointerY: number;
   /** >0 repel, <0 attract, magnitude <= 1 */
@@ -25,6 +29,8 @@ export function createState(reducedMotion: boolean): FieldState {
     target: 0,
     progress: 0,
     nameMix: 0,
+    faceMix: 0,
+    faceReveal: 1,
     pointerX: -1e4,
     pointerY: -1e4,
     force: 0,

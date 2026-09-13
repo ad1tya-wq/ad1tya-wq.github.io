@@ -27,7 +27,8 @@ export function mountScroll({ state, onChapter, onScroll }: ScrollOptions) {
     triggers.push(
       ScrollTrigger.create({
         trigger: el,
-        start: 'top center',
+        // the hero starts at rest while its top is on screen: 0 at scroll 0, not half-melted at the fold
+        start: chapter.id === 'top' ? 'top top' : 'top center',
         end: 'bottom center',
         onUpdate(self) {
           if (state.detached) return;

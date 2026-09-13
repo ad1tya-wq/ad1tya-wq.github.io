@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { mulberry32 } from './particles';
-import { pickPoints } from './namePoints';
+import { maskFromRGBA, pickPoints } from './namePoints';
 
 describe('pickPoints', () => {
   it('returns count points that all fall inside filled mask cells', () => {
@@ -18,5 +18,18 @@ describe('pickPoints', () => {
   it('returns -1 sentinels for an empty mask', () => {
     const pts = pickPoints(new Uint8Array(16), 4, 4, 3, mulberry32(1));
     expect(Array.from(pts)).toEqual([-1, -1, -1, -1, -1, -1]);
+  });
+});
+
+describe('maskFromRGBA', () => {
+  it('keeps only opaque, bright pixels (the lit half of a 1-bit dither)', () => {
+    // 2x2: bright opaque, dark opaque, bright transparent, mid-gray opaque
+    const data = new Uint8ClampedArray([
+      243, 242, 237, 255,
+      21, 22, 23, 255,
+      243, 242, 237, 0,
+      120, 120, 120, 255,
+    ]);
+    expect(Array.from(maskFromRGBA(data, 2, 2))).toEqual([1, 0, 0, 0]);
   });
 });

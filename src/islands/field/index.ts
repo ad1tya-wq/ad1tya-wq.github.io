@@ -17,6 +17,9 @@ void main() {
 
 export interface Field {
   readonly nameSlots: number;
+  readonly faceSlots: number;
+  setFacePoints(pts: Float32Array): void;
+  setFaceBox(x: number, y: number, w: number, h: number): void;
   setNamePoints(pts: Float32Array): void;
   setNameBox(x: number, y: number, w: number, h: number): void;
   setProbe(pts: Float32Array | null): void;
@@ -29,7 +32,7 @@ export interface FieldOptions {
   projectCount: number;
 }
 
-const POINT_UNIFORMS = ['uResolution', 'uDpr', 'uProgress', 'uTime', 'uAnchor', 'uRadius', 'uNameBox', 'uNameMix', 'uPointer', 'uPointerForce', 'uHover', 'uHoverY', 'uDiskScale', 'uGain'] as const;
+const POINT_UNIFORMS = ['uResolution', 'uDpr', 'uProgress', 'uTime', 'uAnchor', 'uRadius', 'uNameBox', 'uNameMix', 'uFaceBox', 'uFaceMix', 'uFaceReveal', 'uPointer', 'uPointerForce', 'uHover', 'uHoverY', 'uDiskScale', 'uGain'] as const;
 const COMPOSITE_UNIFORMS = ['uScene', 'uResolution', 'uDpr', 'uHole', 'uRsPx', 'uTextRect', 'uExposure'] as const;
 
 /** Creates the field and rebuilds it transparently if the WebGL context is lost and later restored. */
@@ -38,6 +41,8 @@ export function createField(canvas: HTMLCanvasElement, opts: FieldOptions): Fiel
   if (!inner) return null;
   // remembered so a rebuilt renderer can pick up where the old one left off
   let lastName: Float32Array | null = null;
+  let lastFace: Float32Array | null = null;
+  let lastFaceBox: [number, number, number, number] | null = null;
   let lastBox: [number, number, number, number] | null = null;
   let lastColumn: Element | null = null;
   let lastProbe: Float32Array | null = null;
@@ -47,6 +52,8 @@ export function createField(canvas: HTMLCanvasElement, opts: FieldOptions): Fiel
     if (!inner) return;
     hidePoster(canvas);
     if (lastName) inner.setNamePoints(lastName);
+    if (lastFace) inner.setFacePoints(lastFace);
+    if (lastFaceBox) inner.setFaceBox(...lastFaceBox);
     if (lastBox) inner.setNameBox(...lastBox);
     inner.setChapterColumn(lastColumn);
     inner.setProbe(lastProbe);
@@ -54,6 +61,15 @@ export function createField(canvas: HTMLCanvasElement, opts: FieldOptions): Fiel
   canvas.addEventListener('webglcontextrestored', onRestored);
   return {
     nameSlots: inner.nameSlots,
+    faceSlots: inner.faceSlots,
+    setFacePoints(pts) {
+      lastFace = pts;
+      inner?.setFacePoints(pts);
+    },
+    setFaceBox(x, y, w, h) {
+      lastFaceBox = [x, y, w, h];
+      inner?.setFaceBox(x, y, w, h);
+    },
     setNamePoints(pts) {
       lastName = pts;
       inner?.setNamePoints(pts);
@@ -92,9 +108,11 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
   let vw = window.innerWidth;
   let vh = window.innerHeight;
   const count = particleCount(vw, vh, lowEnd);
-  const nameSlots = Math.round(0.62 * count); // same rule as generateParticles, known before the buffers arrive
+  const nameSlots = Math.round(0.42 * count); // same rules as generateParticles, known before the buffers arrive
+  const faceSlots = Math.round(0.38 * count);
   let particles: ParticleBuffers | null = null;
   let pendingName: Float32Array | null = null;
+  let pendingFace: Float32Array | null = null;
 
   // ---- programs ----
   const pointsLink = createProgramDeferred(gl, pointsVert, pointsFrag);
@@ -115,6 +133,9 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
   const vao = gl.createVertexArray()!;
   const nameData = new Float32Array(2 * count).fill(-1);
   let nameBuf: WebGLBuffer | null = null;
+  const faceData = new Float32Array(2 * count).fill(-1);
+  let faceBuf: WebGLBuffer | null = null;
+  let faceBox: [number, number, number, number] = [0, 0, 0, 0];
 
   function uploadName(pts: Float32Array) {
     const n = Math.min(pts.length, 2 * nameSlots);
@@ -126,6 +147,15 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
   }
 
   let stagedParticles: ParticleBuffers | null = null;
+  function uploadFace(pts: Float32Array) {
+    const n = Math.min(pts.length, 2 * faceSlots);
+    faceData.fill(-1);
+    faceData.set(pts.subarray(0, n), 2 * nameSlots); // face particles follow the name particles
+    if (!faceBuf) return;
+    gl.bindBuffer(gl.ARRAY_BUFFER, faceBuf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, faceData);
+  }
+
   function adoptParticles(p: ParticleBuffers) {
     if (!programsReady) {
       stagedParticles = p; // attribute locations exist only after the link completes
@@ -140,9 +170,12 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
     attribute(gl, pointsProg, 'aFragment', p.fragment, 1);
     attribute(gl, pointsProg, 'aShip', p.ship, 3);
     nameBuf = attribute(gl, pointsProg, 'aName', nameData, 2, gl.DYNAMIC_DRAW);
+    faceBuf = attribute(gl, pointsProg, 'aFace', faceData, 2, gl.DYNAMIC_DRAW);
     gl.bindVertexArray(null);
     if (pendingName) uploadName(pendingName);
     pendingName = null;
+    if (pendingFace) uploadFace(pendingFace);
+    pendingFace = null;
   }
 
   // generate off the main thread; fall back to inline generation if workers are unavailable
@@ -215,6 +248,9 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
     gl.uniform1f(pu.uRadius, anchor.r);
     gl.uniform4f(pu.uNameBox, nameBox[0], nameBox[1] - window.scrollY, nameBox[2], nameBox[3]);
     gl.uniform1f(pu.uNameMix, state.nameMix);
+    gl.uniform4f(pu.uFaceBox, faceBox[0], faceBox[1] - window.scrollY, faceBox[2], faceBox[3]);
+    gl.uniform1f(pu.uFaceMix, state.faceMix);
+    gl.uniform1f(pu.uFaceReveal, state.faceReveal);
     gl.uniform2f(pu.uPointer, state.pointerX, state.pointerY);
     gl.uniform1f(pu.uPointerForce, state.force);
     gl.uniform1f(pu.uHover, state.hover);
@@ -302,6 +338,17 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
 
   return {
     nameSlots,
+    faceSlots,
+    setFacePoints(pts) {
+      if (!particles) {
+        pendingFace = pts;
+        return;
+      }
+      uploadFace(pts);
+    },
+    setFaceBox(x, y, w, h) {
+      faceBox = [x, y, w, h];
+    },
     setNamePoints(pts) {
       if (!particles) {
         pendingName = pts;

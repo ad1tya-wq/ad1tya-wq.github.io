@@ -38,7 +38,9 @@ export interface ParticleBuffers {
   fragment: Float32Array;
   /** xyz per particle: ship-local x (along heading), y (across), z = 0 hull, (0,1] exhaust age, -1 not part of the ship */
   ship: Float32Array;
+  /** the first nameSlots particles may carry name points; the next faceSlots carry portrait points */
   nameSlots: number;
+  faceSlots: number;
 }
 
 /** Particles that form the spacecraft: the first SHIP_HULL are hull, the next SHIP_EXHAUST are exhaust. */
@@ -66,7 +68,8 @@ export function generateParticles(count: number, projectCount: number, seed = 13
     disk: new Float32Array(4 * count),
     fragment: new Float32Array(count),
     ship: new Float32Array(3 * count).fill(-1),
-    nameSlots: Math.round(0.62 * count),
+    nameSlots: Math.round(0.42 * count),
+    faceSlots: Math.round(0.38 * count),
   };
 
   // spacecraft: hull points by rejection sampling, exhaust points trailing behind the nozzle

@@ -29,7 +29,7 @@ import { site } from '../content/site';
   .hero__name {
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: clamp(2.25rem, 8.6vw, 10rem);
+    font-size: clamp(2.25rem, 8.1vw, 10rem);
     line-height: 0.9;
     letter-spacing: -0.03em;
     text-transform: uppercase;
@@ -53,6 +53,14 @@ import { site } from '../content/site';
     height: 100%;
     width: 100%;
   }
+  /* desktop: the particles are the portrait; the dithered layer hides, the photo still comes up on hover/focus/press */
+  .hero__portrait.is-particles :global(.dimg__dither) { opacity: 0; }
+  /* touch: the image dissolves into the particles under it on the first scroll */
+  .hero__portrait.is-dissolved :global(.dimg) {
+    opacity: 0;
+    transition: opacity 300ms var(--ease-out);
+  }
+  .hero__portrait :global(.dimg) { transition: opacity 300ms var(--ease-out); }
   .hero__col {
     position: relative;
     z-index: 2;

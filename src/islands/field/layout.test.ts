@@ -15,10 +15,10 @@ describe('computeAnchor', () => {
 });
 
 describe('particleCount', () => {
-  it('clamps to [15k, 60k] and scales down on low-end devices', () => {
-    expect(particleCount(1440, 900, false)).toBe(45360);
-    expect(particleCount(390, 844, false)).toBe(15000);
-    expect(particleCount(3840, 2160, false)).toBe(60000);
-    expect(particleCount(1440, 900, true)).toBe(18144);
+  it('clamps to [20k, 80k] and scales down on low-end devices', () => {
+    expect(particleCount(1440, 900, false)).toBe(64800);
+    expect(particleCount(390, 844, false)).toBe(20000);
+    expect(particleCount(3840, 2160, false)).toBe(80000);
+    expect(particleCount(1440, 900, true)).toBe(25920);
   });
 });

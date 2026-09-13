@@ -7,6 +7,7 @@ in vec3 aStar;      // point in the unit sphere, weighted to the surface
 in vec4 aEjecta;    // xyz unit direction, w speed factor 0.6..1.4
 in vec4 aDisk;      // x radius in r_s (3..12), y phase, z vertical jitter, w 1 = falls back
 in float aFragment; // project index
+in vec2 aFace;      // 0..1 inside the portrait box, or (-1,-1) when unassigned
 in vec3 aShip;      // ship-local x, y; z = 0 hull, (0,1] exhaust age, -1 not on the ship
 
 uniform vec2 uResolution;   // css px
@@ -17,6 +18,9 @@ uniform vec2 uAnchor;       // object centre, css px
 uniform float uRadius;      // star radius R, css px
 uniform vec4 uNameBox;      // x y w h of the h1 glyph box, css px
 uniform float uNameMix;     // load-time assembly 0..1
+uniform vec4 uFaceBox;      // x y w h of the portrait, css px
+uniform float uFaceMix;     // 1 once portrait points exist
+uniform float uFaceReveal;  // face particle brightness (dips while the photo shows)
 uniform vec2 uPointer;      // css px
 uniform float uPointerForce;// >0 repel, <0 attract
 uniform float uHover;       // hovered fragment or -1
@@ -101,6 +105,12 @@ void main() {
   float nameW = hasName * (1.0 - wStar);
   px = mix(px, nameNow, nameW);
 
+  // ---- portrait state: particles sit exactly on the lit pixels of the dithered photo ----
+  float hasFace = step(0.0, aFace.x);
+  vec2 facePx = uFaceBox.xy + aFace * uFaceBox.zw;
+  float faceW = hasFace * (1.0 - wStar);
+  px = mix(px, facePx, faceW);
+
   // ---- hovered project cluster gathers toward its row ----
   float isHover = step(0.5, 1.0 - abs(aFragment - uHover)) * step(0.0, uHover) * wEject * (1.0 - wRem);
   px = mix(px, vec2(uAnchor.x, uHoverY), 0.15 * isHover);
@@ -142,15 +152,18 @@ void main() {
   b = mix(b, mix(bRem * (1.0 - 0.7 * tFall), mix(bRem, bDisk, tFall), falls), wFall);
   b = mix(b, mix(bRem * 0.3, bDisk, falls), wHole);
   b = mix(b, 0.9, nameW);
+  b = mix(b, 1.0 * uFaceReveal, faceW);
   b *= mix(1.0, 2.0, isHover);
   float bShip = mix(1.1, 0.9 * (1.0 - aShip.z) * flicker, step(0.001, aShip.z));
   b = mix(b, bShip, shipW);
 
   // name particles stay invisible until assembly starts (the real h1 carries the name until then)
   float invisibleName = hasName * (1.0 - wStar) * (1.0 - step(0.001, uNameMix));
-  vBright = b * (1.0 - invisibleName) * uGain;
+  float invisibleFace = hasFace * (1.0 - wStar) * (1.0 - step(0.001, uFaceMix));
+  vBright = b * (1.0 - invisibleName) * (1.0 - invisibleFace) * uGain;
 
   float size = 1.4 + 1.2 * wBreak * (1.0 - ss(0.20, 0.26, p)) + 0.5 * wEject * (1.0 - wFall) + 0.6 * falls * wHole;
+  size = mix(size, 1.6, faceW);
   size = mix(size, 1.7 - 0.5 * aShip.z, shipW);
 
   vec2 clip = (px / uResolution) * 2.0 - 1.0;
