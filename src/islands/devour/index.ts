@@ -11,6 +11,7 @@ import { RingPool } from './pool';
  * back in reverse; at full mass everything is gone and "Reset the universe?" reloads the page.
  */
 const FLIGHT = 1.6; // seconds, same as the shader
+const LAG = 0.35; // the last particle of a block leaves this much later (shader: lag * 0.35)
 const TEXT_SELECTOR =
   'main :is(h1, h2, h3, p, dt, dd, li.line, .btn, .link, .plate__issuer, .plate__title, .plate__verify, .row__link, .readout__fact)';
 
@@ -147,7 +148,7 @@ export function mountDevour({ state, field, reducedMotion }: { state: FieldState
       b.startedAt = start;
       b.dir = -1;
       field!.setEat(b.range.from, b.pts, start, -1);
-      const remaining = FLIGHT - Math.max(0, field!.now() - start);
+      const remaining = FLIGHT + LAG - Math.max(0, field!.now() - start); // wait for the most lagged particle
       b.timer = window.setTimeout(() => {
         b.el.classList.remove('is-eaten');
         if (b.range) field!.clearEat(b.range.from, b.range.to);
@@ -164,8 +165,14 @@ export function mountDevour({ state, field, reducedMotion }: { state: FieldState
   };
 
   // ---- slider ----
+  // a reload after Reset lands at the top; give scroll restoration back to the browser for ordinary navigation
+  history.scrollRestoration = 'auto';
+  slider.value = '0'; // some browsers restore form values across a reload; the field always starts at rest
   let eaten = 0;
   let voidTimer = 0;
+  const say = (text: string) => {
+    if (status.textContent !== text) status.textContent = text; // an unchanged live region should not re-announce
+  };
   const apply = () => {
     const m = Number(slider.value) / 100;
     state.mass = m;
@@ -181,10 +188,10 @@ export function mountDevour({ state, field, reducedMotion }: { state: FieldState
     const all = n === list.length && list.length > 0;
     reset.hidden = true;
     if (all) {
-      status.textContent = 'Nothing escapes.';
-      voidTimer = window.setTimeout(() => (reset.hidden = false), reducedMotion ? 450 : FLIGHT * 1000 + 200);
-    } else if (n === 0) status.textContent = 'More mass, more reach.';
-    else status.textContent = `${n} of ${list.length} blocks taken. Lower the mass to let them out.`;
+      say('Nothing escapes.');
+      voidTimer = window.setTimeout(() => (reset.hidden = false), reducedMotion ? 450 : (FLIGHT + LAG) * 1000 + 200);
+    } else if (n === 0) say('More mass, more reach.');
+    else say(`${n} of ${list.length} blocks taken. Lower the mass to let them out.`);
   };
   slider.addEventListener('input', apply);
 
