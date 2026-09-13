@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CHAPTERS, MODE_TARGETS, chapterAt, chapterProgress, clamp01, damp, holeRadiusPx, lerp, smoothstep } from './lifecycle';
+import { CHAPTERS, chapterAt, chapterProgress, clamp01, damp, holeRadiusPx, lerp, smoothstep } from './lifecycle';
 
 describe('CHAPTERS', () => {
   it('tile [0, 1] contiguously in spec order', () => {
@@ -53,12 +53,6 @@ describe('math helpers', () => {
     expect(oneBig).toBeCloseTo(twoSmall, 6);
     expect(oneBig).toBeGreaterThan(0);
     expect(oneBig).toBeLessThan(1);
-  });
-  it('MODE_TARGETS sit in the intended chapters', () => {
-    expect(chapterAt(MODE_TARGETS.star)).toBe('top');
-    expect(chapterAt(MODE_TARGETS.nova)).toBe('about');
-    expect(chapterAt(MODE_TARGETS.remnant)).toBe('skills');
-    expect(chapterAt(MODE_TARGETS.horizon)).toBe('horizon');
   });
 });
 

@@ -21,7 +21,7 @@ uniform vec4 uNameBox;      // x y w h of the h1 glyph box, css px
 uniform float uNameMix;     // load-time assembly 0..1
 uniform vec4 uFaceBox;      // x y w h of the portrait, css px
 uniform float uFaceMix;     // 1 once portrait points exist
-uniform float uFaceReveal;  // face particle brightness (dips while the photo shows)
+uniform vec3 uWave;         // reveal wave: origin xy (viewport css px), radius z; the photo shows inside
 uniform float uActiveFragment; // project whose cluster forms its pictogram, or -1
 uniform vec4 uPictoBox;     // x y w h of the pictogram slot, css px (viewport)
 uniform float uPictoMix;    // pictogram assembly 0..1
@@ -113,6 +113,12 @@ void main() {
   float hasFace = step(0.0, aFace.x);
   vec2 facePx = uFaceBox.xy + aFace * uFaceBox.zw;
   float faceW = hasFace * (1.0 - wStar);
+  // the wavefront passing through the portrait nudges particles outward, then leaves the photo behind it
+  vec2 wd = facePx - uWave.xy;
+  float wDist = length(wd) + 1e-3;
+  float front = exp(-pow((wDist - uWave.z) / 28.0, 2.0)) * step(0.5, uWave.z);
+  float inside = 1.0 - ss(uWave.z - 24.0, uWave.z + 24.0, wDist);
+  facePx += (wd / wDist) * 7.0 * front;
   px = mix(px, facePx, faceW);
 
   // ---- hovered project cluster gathers toward its row ----
@@ -163,7 +169,7 @@ void main() {
   b = mix(b, mix(bRem * (1.0 - 0.7 * tFall), mix(bRem, bDisk, tFall), falls), wFall);
   b = mix(b, mix(bRem * 0.3, bDisk, falls), wHole);
   b = mix(b, 0.9, nameW);
-  b = mix(b, 1.0 * uFaceReveal, faceW);
+  b = mix(b, mix(1.0, 0.12, inside) + 0.8 * front, faceW);
   b *= mix(1.0, 2.0, isHover);
   b = mix(b, 1.5, pictoW);
   float bShip = mix(1.1, 0.9 * (1.0 - aShip.z) * flicker, step(0.001, aShip.z));

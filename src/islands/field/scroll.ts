@@ -5,13 +5,6 @@ import type { FieldState } from './state';
 
 gsap.registerPlugin(ScrollTrigger);
 
-/** 0 when the section's top crosses the viewport centre, 1 when its bottom does. */
-export function sectionProgress(rectTop: number, rectHeight: number, viewportHeight: number): number {
-  const centre = viewportHeight / 2;
-  const t = (centre - rectTop) / rectHeight;
-  return t < 0 ? 0 : t > 1 ? 1 : t;
-}
-
 export interface ScrollOptions {
   state: FieldState;
   onChapter?: (id: ChapterId, el: HTMLElement) => void;
@@ -31,7 +24,6 @@ export function mountScroll({ state, onChapter, onScroll }: ScrollOptions) {
         start: chapter.id === 'top' ? 'top top' : 'top center',
         end: 'bottom center',
         onUpdate(self) {
-          if (state.detached) return;
           state.target = state.reducedMotion ? chapter.poster : chapterProgress(chapter.id, self.progress);
         },
         onToggle(self) {
@@ -53,7 +45,7 @@ export function mountScroll({ state, onChapter, onScroll }: ScrollOptions) {
   );
 
   // before the hero centre the star is at rest
-  if (!state.detached) state.target = state.reducedMotion ? CHAPTERS[0]!.poster : 0;
+  state.target = state.reducedMotion ? CHAPTERS[0]!.poster : 0;
 
   return {
     refresh: () => ScrollTrigger.refresh(),

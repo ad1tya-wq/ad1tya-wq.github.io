@@ -19,9 +19,6 @@ export const CHAPTERS: readonly Chapter[] = [
   { id: 'contact', start: 0.94, end: 1.0, poster: 1.0 },
 ];
 
-export const MODE_TARGETS = { star: 0.08, nova: 0.19, remnant: 0.6, horizon: 0.9 } as const;
-export type ModeId = keyof typeof MODE_TARGETS | 'scroll';
-
 export const clamp01 = (x: number): number => (x < 0 ? 0 : x > 1 ? 1 : x);
 export const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
 

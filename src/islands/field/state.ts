@@ -7,8 +7,10 @@ export interface FieldState {
   nameMix: number;
   /** 1 once portrait points are uploaded (they sit exactly under the image) */
   faceMix: number;
-  /** face particle brightness, dips while the real photo is shown on hover */
-  faceReveal: number;
+  /** reveal wave for the portrait: origin (viewport css px) and radius; particles inside the circle dim while the photo shows */
+  waveX: number;
+  waveY: number;
+  waveR: number;
   pointerX: number;
   pointerY: number;
   /** >0 repel, <0 attract, magnitude <= 1 */
@@ -21,8 +23,6 @@ export interface FieldState {
   activeFragment: number;
   /** pictogram assembly 0..1 (tweened when the active project changes) */
   pictoMix: number;
-  /** true while a mode toggle overrides scroll */
-  detached: boolean;
   reducedMotion: boolean;
   /** current text column in css px: x, y, w, h */
   textRect: [number, number, number, number];
@@ -34,7 +34,9 @@ export function createState(reducedMotion: boolean): FieldState {
     progress: 0,
     nameMix: 0,
     faceMix: 0,
-    faceReveal: 1,
+    waveX: 0,
+    waveY: 0,
+    waveR: 0,
     pointerX: -1e4,
     pointerY: -1e4,
     force: 0,
@@ -42,7 +44,6 @@ export function createState(reducedMotion: boolean): FieldState {
     hoverY: 0,
     activeFragment: -1,
     pictoMix: 0,
-    detached: false,
     reducedMotion,
     textRect: [0, 0, 0, 0],
   };

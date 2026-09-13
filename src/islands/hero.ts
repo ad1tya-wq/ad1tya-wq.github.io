@@ -48,27 +48,55 @@ export function mountHero({ state, field }: { state: FieldState; field: Field | 
     }
     if (uploadFace() && wrapper) {
       state.faceMix = 1;
-      if (hoverCapable) {
-        // desktop: particles are the portrait; the photo appears on hover/focus and the particles dim
+      if (hoverCapable && button) {
+        // desktop: particles are the portrait; the photo appears as a wave spreading from the pointer,
+        // particles inside the wave dim, and the wave recedes to where the pointer left
         wrapper.classList.add('is-particles');
-        const show = () => {
-          button?.classList.add('is-hot');
-          gsap.to(state, { faceReveal: 0.12, duration: 0.22, ease: 'power2.out' });
+        let tween: gsap.core.Tween | null = null;
+        const farthest = (x: number, y: number, r: DOMRect) =>
+          Math.hypot(Math.max(x - r.left, r.right - x), Math.max(y - r.top, r.bottom - y));
+        // origin in viewport px for the field, in element px for the CSS clip-path
+        const origin = (x: number, y: number) => {
+          const r = button.getBoundingClientRect();
+          state.waveX = x;
+          state.waveY = y + window.scrollY;
+          button.style.setProperty('--wave-x', `${x - r.left}px`);
+          button.style.setProperty('--wave-y', `${y - r.top}px`);
+          return farthest(x, y, r);
         };
-        const hide = () => {
-          if (button?.getAttribute('aria-pressed') === 'true') return; // pinned by a click
-          button?.classList.remove('is-hot');
-          gsap.to(state, { faceReveal: 1, duration: 0.3, ease: 'power2.out' });
+        const setR = (r: number) => button.style.setProperty('--wave-r', `${r}px`);
+        const pointOf = (e: Event) => {
+          const r = button.getBoundingClientRect();
+          return e instanceof PointerEvent ? [e.clientX, e.clientY] : [r.left + r.width / 2, r.top + r.height / 2];
+        };
+        const show = (e: Event) => {
+          const [x, y] = pointOf(e) as [number, number];
+          const max = origin(x, y);
+          button.classList.add('is-hot');
+          tween?.kill();
+          tween = gsap.to(state, { waveR: max, duration: 0.6, ease: 'power2.out', onUpdate: () => setR(state.waveR) });
+        };
+        const hide = (e: Event) => {
+          if (button.getAttribute('aria-pressed') === 'true') return; // pinned by a click
+          const [x, y] = pointOf(e) as [number, number];
+          state.waveR = origin(x, y); // re-centre on the exit point while still covering the whole portrait
+          tween?.kill();
+          tween = gsap.to(state, {
+            waveR: 0,
+            duration: 0.5,
+            ease: 'power2.in',
+            onUpdate: () => setR(state.waveR),
+            onComplete: () => button.classList.remove('is-hot'),
+          });
         };
         wrapper.addEventListener('pointerenter', show);
         wrapper.addEventListener('pointerleave', hide);
         wrapper.addEventListener('focusin', show);
         wrapper.addEventListener('focusout', hide);
-        button?.addEventListener('click', () => {
-          // a click pins the photo (aria-pressed toggled by DitheredImage); keep particles dim while pinned
-          const pinned = button.getAttribute('aria-pressed') === 'true';
-          button.classList.toggle('is-hot', pinned);
-          gsap.to(state, { faceReveal: pinned ? 0.12 : 1, duration: 0.25 });
+        button.addEventListener('click', (e) => {
+          // a click pins the photo (aria-pressed toggled by DitheredImage); unpinning lets the wave recede
+          if (button.getAttribute('aria-pressed') === 'true') show(e);
+          else hide(e);
         });
       } else {
         // touch: the image dissolves into the particles beneath it on the first scroll notch

@@ -39,7 +39,7 @@ export interface FieldOptions {
   projectCount: number;
 }
 
-const POINT_UNIFORMS = ['uResolution', 'uDpr', 'uProgress', 'uTime', 'uAnchor', 'uRadius', 'uNameBox', 'uNameMix', 'uFaceBox', 'uFaceMix', 'uFaceReveal', 'uActiveFragment', 'uPictoBox', 'uPictoMix', 'uPointer', 'uPointerForce', 'uHover', 'uHoverY', 'uDiskScale', 'uGain'] as const;
+const POINT_UNIFORMS = ['uResolution', 'uDpr', 'uProgress', 'uTime', 'uAnchor', 'uRadius', 'uNameBox', 'uNameMix', 'uFaceBox', 'uFaceMix', 'uWave', 'uActiveFragment', 'uPictoBox', 'uPictoMix', 'uPointer', 'uPointerForce', 'uHover', 'uHoverY', 'uDiskScale', 'uGain'] as const;
 const COMPOSITE_UNIFORMS = ['uScene', 'uResolution', 'uDpr', 'uHole', 'uRsPx', 'uTextRect', 'uExposure'] as const;
 
 /** Creates the field and rebuilds it transparently if the WebGL context is lost and later restored. */
@@ -302,7 +302,7 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
     gl.uniform1f(pu.uNameMix, state.nameMix);
     gl.uniform4f(pu.uFaceBox, faceBox[0], faceBox[1] - window.scrollY, faceBox[2], faceBox[3]);
     gl.uniform1f(pu.uFaceMix, state.faceMix);
-    gl.uniform1f(pu.uFaceReveal, state.faceReveal);
+    gl.uniform3f(pu.uWave, state.waveX, state.waveY - window.scrollY, state.waveR);
     gl.uniform1f(pu.uActiveFragment, state.activeFragment);
     gl.uniform4f(pu.uPictoBox, pictoBox[0], pictoBox[1], pictoBox[2], pictoBox[3]);
     gl.uniform1f(pu.uPictoMix, state.pictoMix);

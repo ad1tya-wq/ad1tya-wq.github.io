@@ -12,7 +12,7 @@ export function computeAnchor(vw: number, vh: number): Anchor {
   return { x: vw * 0.62, y: vh * 0.5, r: m * 0.16 };
 }
 
-/** clamp(area * 0.035, 15k, 60k), x0.4 on low-end devices (spec section 3). */
+/** clamp(area * 0.05, 20k, 80k), x0.4 on low-end devices: 42 % name, 38 % portrait, the rest is the resting star. */
 export function particleCount(vw: number, vh: number, lowEnd: boolean): number {
   const n = Math.min(80000, Math.max(20000, Math.round(vw * vh * 0.05)));
   return lowEnd ? Math.round(n * 0.4) : n;

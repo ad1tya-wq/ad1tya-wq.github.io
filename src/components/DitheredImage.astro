@@ -33,6 +33,13 @@ const { base, alt, width = 791, height = 720 } = Astro.props;
   .dimg:focus-visible .dimg__color,
   .dimg[aria-pressed='true'] .dimg__color,
   .dimg.is-hot .dimg__color { opacity: 1; }
+  /* particle mode (desktop hero): the photo is revealed by a circle growing from the pointer, in step with the field */
+  :global(.is-particles) .dimg:not(.is-hot) .dimg__color { opacity: 0; }
+  :global(.is-particles) .dimg.is-hot .dimg__color {
+    opacity: 1;
+    transition: none;
+    clip-path: circle(var(--wave-r, 0px) at var(--wave-x, 50%) var(--wave-y, 50%));
+  }
 </style>
 
 <script>
