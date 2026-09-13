@@ -15,6 +15,7 @@ void main() {
 }`;
 
 export interface Field {
+  readonly nameSlots: number;
   setNamePoints(pts: Float32Array): void;
   setNameBox(x: number, y: number, w: number, h: number): void;
   setProbe(pts: Float32Array | null): void;
@@ -115,7 +116,7 @@ export function createField(canvas: HTMLCanvasElement, { state, projectCount }: 
     gl.uniform1f(pu.uTime, time);
     gl.uniform2f(pu.uAnchor, anchor.x, anchor.y);
     gl.uniform1f(pu.uRadius, anchor.r);
-    gl.uniform4f(pu.uNameBox, nameBox[0], nameBox[1], nameBox[2], nameBox[3]);
+    gl.uniform4f(pu.uNameBox, nameBox[0], nameBox[1] - window.scrollY, nameBox[2], nameBox[3]);
     gl.uniform1f(pu.uNameMix, state.nameMix);
     gl.uniform2f(pu.uPointer, state.pointerX, state.pointerY);
     gl.uniform1f(pu.uPointerForce, state.force);
@@ -182,6 +183,7 @@ export function createField(canvas: HTMLCanvasElement, { state, projectCount }: 
   raf = requestAnimationFrame(tick);
 
   return {
+    nameSlots: particles.nameSlots,
     setNamePoints(pts) {
       const n = Math.min(pts.length, 2 * particles.nameSlots);
       nameData.fill(-1);
