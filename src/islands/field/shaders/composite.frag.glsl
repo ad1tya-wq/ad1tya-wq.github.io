@@ -52,10 +52,12 @@ void main() {
     lum = sceneAt(pxCss);
   }
 
-  // dim the field by half inside the current text column, with a 48 px soft edge so no seam shows
+  // dim the field inside the current text column, with a 48 px soft edge so no seam shows;
+  // on narrow viewports the object sits behind the column, so the dimming is much stronger there
+  float dimK = uResolution.x < 768.0 ? 0.88 : 0.5;
   vec2 lo = smoothstep(uTextRect.xy - 24.0, uTextRect.xy + 24.0, pxCss);
   vec2 hi = 1.0 - smoothstep(uTextRect.xy + uTextRect.zw - 24.0, uTextRect.xy + uTextRect.zw + 24.0, pxCss);
-  lum *= 1.0 - 0.5 * lo.x * lo.y * hi.x * hi.y;
+  lum *= 1.0 - dimK * lo.x * lo.y * hi.x * hi.y;
 
   lum = clamp(lum * uExposure, 0.0, 1.0);
 

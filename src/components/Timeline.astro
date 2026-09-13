@@ -1,0 +1,40 @@
+---
+/** One spiral timeline: used by Experience and Education so both read as the same object. */
+export interface Entry {
+  dates: string;
+  title: string;
+  summary: string;
+  link?: { href: string; label: string };
+}
+interface Props {
+  entries: Entry[];
+}
+const { entries } = Astro.props;
+---
+<div class="timeline">
+  <svg class="spiral" viewBox="0 0 100 400" preserveAspectRatio="none" aria-hidden="true" data-spiral>
+    <path d="M 2 0 C 2 140, 2 220, 20 300 S 80 380, 100 400" fill="none" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" />
+  </svg>
+  <ul class="entries">
+    {entries.map((e) => (
+      <li class="entry" data-reveal>
+        <p class="entry__dates mono">{e.dates}</p>
+        <p class="entry__title">{e.title}</p>
+        <p class="entry__summary">{e.summary}</p>
+        {e.link && (
+          <a class="link entry__link" href={e.link.href} rel="noopener" target="_blank">{e.link.label} <span aria-hidden="true">↗</span></a>
+        )}
+      </li>
+    ))}
+  </ul>
+</div>
+
+<style>
+  .timeline { position: relative; padding-left: var(--s-4); }
+  .spiral { position: absolute; top: 0; left: 0; width: 100%; height: 100%; color: var(--fog); overflow: visible; }
+  .entries { display: grid; gap: var(--s-5); }
+  .entry__dates { font-size: var(--fs-mono-sm); }
+  .entry__title { margin-top: var(--s-1); font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; color: var(--core); }
+  .entry__summary { margin-top: var(--s-1); max-width: var(--measure); }
+  .entry__link { display: inline-block; margin-top: var(--s-2); font-family: var(--font-mono); font-size: var(--fs-mono-sm); letter-spacing: 0.06em; }
+</style>

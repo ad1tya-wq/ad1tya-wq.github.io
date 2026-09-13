@@ -1,36 +1,36 @@
 ---
 import { getCollection } from 'astro:content';
-const items = (await getCollection('experience')).sort((a, b) => a.data.order - b.data.order);
+import Timeline, { type Entry } from './Timeline.astro';
+
+const experience: Entry[] = (await getCollection('experience'))
+  .sort((a, b) => a.data.order - b.data.order)
+  .map((e) => ({
+    dates: `${e.data.start} to ${e.data.end ?? 'present'}`,
+    title: `${e.data.role}, ${e.data.org}`,
+    summary: e.data.summary,
+    link: e.data.certificate ? { href: e.data.certificate, label: 'Certificate' } : undefined,
+  }));
+
+const education: Entry[] = (await getCollection('education'))
+  .sort((a, b) => a.data.order - b.data.order)
+  .map((e) => ({
+    dates: `${e.data.start} to ${e.data.end}`,
+    title: e.data.degree,
+    summary: `${e.data.institution}. ${e.data.score}.`,
+  }));
 ---
+<!-- one chapter, two timelines: the field's fallback phase runs across both -->
 <section id="experience" class="section" data-chapter="experience" aria-labelledby="experience-h">
   <div class="col">
     <h2 id="experience-h">Experience</h2>
-    <div class="timeline">
-      <svg class="spiral" viewBox="0 0 100 400" preserveAspectRatio="none" aria-hidden="true" data-spiral>
-        <path d="M 2 0 C 2 140, 2 220, 20 300 S 80 380, 100 400" fill="none" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" />
-      </svg>
-      <ul class="entries">
-        {items.map((e) => (
-          <li class="entry" data-reveal>
-            <p class="entry__dates mono">{e.data.start} to {e.data.end ?? 'present'}</p>
-            <p class="entry__role">{e.data.role}, {e.data.org}</p>
-            <p class="entry__summary">{e.data.summary}</p>
-            {e.data.certificate && (
-              <a class="link entry__cert" href={e.data.certificate} rel="noopener" target="_blank">Certificate <span aria-hidden="true">↗</span></a>
-            )}
-          </li>
-        ))}
-      </ul>
-    </div>
+    <Timeline entries={experience} />
+  </div>
+  <div class="col education" id="education">
+    <h2 id="education-h">Education</h2>
+    <Timeline entries={education} />
   </div>
 </section>
 
 <style>
-  .timeline { position: relative; padding-left: var(--s-4); }
-  .spiral { position: absolute; top: 0; left: 0; width: 100%; height: 100%; color: var(--fog); overflow: visible; }
-  .entries { display: grid; gap: var(--s-5); }
-  .entry__dates { font-size: var(--fs-mono-sm); }
-  .entry__role { margin-top: var(--s-1); font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; color: var(--core); }
-  .entry__summary { margin-top: var(--s-1); max-width: var(--measure); }
-  .entry__cert { display: inline-block; margin-top: var(--s-2); font-family: var(--font-mono); font-size: var(--fs-mono-sm); letter-spacing: 0.06em; }
+  .education { margin-top: var(--s-6); }
 </style>

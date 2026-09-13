@@ -28,22 +28,23 @@ export function mountReveals({ reducedMotion }: { reducedMotion: boolean }): voi
     ScrollTrigger.create({ trigger: band, start: 'top 82%', once: true, onEnter: () => band.classList.add('is-revealed') });
   });
 
-  // the experience hairline draws itself as the section scrolls by (accretion spiral)
-  const path = document.querySelector<SVGPathElement>('[data-spiral] path');
-  if (!path) return;
-  const length = path.getTotalLength();
-  path.style.strokeDasharray = `${length}`;
-  if (reducedMotion) {
-    path.style.strokeDashoffset = '0';
-    return;
-  }
-  gsap.fromTo(
-    path,
-    { strokeDashoffset: length },
-    {
-      strokeDashoffset: 0,
-      ease: 'none',
-      scrollTrigger: { trigger: '#experience', start: 'top 70%', end: 'bottom 60%', scrub: 0.5 },
-    },
-  );
+  // each timeline hairline draws itself as its block scrolls by (accretion spiral)
+  document.querySelectorAll<SVGPathElement>('[data-spiral] path').forEach((path) => {
+    const length = path.getTotalLength();
+    path.style.strokeDasharray = `${length}`;
+    if (reducedMotion) {
+      path.style.strokeDashoffset = '0';
+      return;
+    }
+    const block = path.closest('.col') ?? path.closest('[data-spiral]')!;
+    gsap.fromTo(
+      path,
+      { strokeDashoffset: length },
+      {
+        strokeDashoffset: 0,
+        ease: 'none',
+        scrollTrigger: { trigger: block, start: 'top 70%', end: 'bottom 60%', scrub: 0.5 },
+      },
+    );
+  });
 }

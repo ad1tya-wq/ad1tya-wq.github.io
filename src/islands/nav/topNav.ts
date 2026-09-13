@@ -145,14 +145,19 @@ export function mountTopNav({ reducedMotion }: { reducedMotion: boolean }): TopN
   });
 
   // ---- mobile toggle ----
+  // the disc unrolls into a column: height is animated explicitly because auto cannot be transitioned
   function setMobileOpen(open: boolean) {
     mobileOpen = open;
     toggle!.setAttribute('aria-expanded', String(open));
+    links.forEach((l) => (l.parentElement!.hidden = false));
     nav!.classList.toggle('is-open', open);
     topbar!.classList.toggle('is-open', open);
-    if (active) moveIndicator(active, false);
+    nav!.style.height = open ? `${nav!.scrollHeight}px` : '';
   }
   toggle.addEventListener('click', () => setMobileOpen(!mobileOpen));
+  document.addEventListener('pointerdown', (e) => {
+    if (mobileOpen && !nav!.contains(e.target as Node)) setMobileOpen(false);
+  });
 
   // ---- smooth scroll for every header hash link ----
   topbar.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((a) => {
@@ -168,6 +173,7 @@ export function mountTopNav({ reducedMotion }: { reducedMotion: boolean }): TopN
   });
 
   window.addEventListener('resize', () => {
+    if (mobileOpen && !isMobile()) setMobileOpen(false);
     if (active) moveIndicator(active, false);
   });
 
