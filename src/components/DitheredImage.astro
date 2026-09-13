@@ -1,0 +1,58 @@
+---
+interface Props { base: string; alt: string; size?: number }
+const { base, alt, size = 280 } = Astro.props;
+---
+<button type="button" class="dimg" style={`--size:${size}px`} aria-pressed="false" data-dimg>
+  <span class="sr-only">Show the portrait in color</span>
+  <img class="dimg__dither" src={`${base}-dither.png`} alt={alt} width={size} height={size} decoding="async" fetchpriority="high" />
+  <picture class="dimg__color" aria-hidden="true">
+    <source srcset={`${base}.avif`} type="image/avif" />
+    <img src={`${base}.webp`} alt="" width={size} height={size} loading="lazy" decoding="async" />
+  </picture>
+</button>
+
+<style>
+  .dimg {
+    position: relative;
+    display: block;
+    width: var(--size);
+    height: var(--size);
+    max-width: 100%;
+    aspect-ratio: 1;
+    cursor: pointer;
+    transition: transform var(--d-press) var(--ease-out);
+  }
+  .dimg:active { transform: scale(0.98); }
+  .dimg img { width: 100%; height: 100%; object-fit: cover; }
+  .dimg__color {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity var(--d-image) var(--ease-out);
+  }
+  .dimg:hover .dimg__color,
+  .dimg:focus-visible .dimg__color,
+  .dimg.is-centered .dimg__color,
+  .dimg[aria-pressed='true'] .dimg__color { opacity: 1; }
+  @media (max-width: 767px) {
+    .dimg { width: 120px; height: 120px; }
+  }
+</style>
+
+<script>
+  const els = document.querySelectorAll<HTMLButtonElement>('[data-dimg]');
+  els.forEach((el) => {
+    el.addEventListener('click', () => {
+      const on = el.getAttribute('aria-pressed') === 'true';
+      el.setAttribute('aria-pressed', String(!on));
+    });
+  });
+  // touch devices have no hover: color in while the portrait is near the viewport centre
+  if (window.matchMedia('(hover: none)').matches) {
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => e.target.classList.toggle('is-centered', e.isIntersecting)),
+      { rootMargin: '-40% 0px -40% 0px' },
+    );
+    els.forEach((el) => io.observe(el));
+  }
+</script>
