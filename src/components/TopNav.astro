@@ -129,4 +129,21 @@ import { site, chapters } from '../content/site';
     .pill__toggle { display: inline-flex; }
     .topbar__contact { padding-inline: var(--s-2); }
   }
+
+  @media (max-width: 767px) {
+    .pill__item:not(.is-active) { display: none; }
+    .pill.is-open {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      top: 12px;
+      justify-content: flex-start;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+    .pill.is-open .pill__item { display: inline-flex; scroll-snap-align: start; }
+    .topbar.is-open .wordmark,
+    .topbar.is-open .topbar__contact { opacity: 0; pointer-events: none; }
+  }
 </style>
