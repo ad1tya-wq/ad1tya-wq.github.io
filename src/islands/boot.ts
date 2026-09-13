@@ -7,6 +7,7 @@ import { mountReveals } from './reveals';
 import { mountHero } from './hero';
 import { mountModes } from './modes';
 import { mountPointer } from './pointer';
+import { mountToy } from './toy';
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const canvas = document.getElementById('field') as HTMLCanvasElement | null;
@@ -30,6 +31,7 @@ export const scroll = mountScroll({
 mountHero({ state, field });
 export const modes = mountModes({ state, reducedMotion });
 export const pointer = mountPointer({ state });
+mountToy({ state, field, pointer, reducedMotion });
 mountProjectsHover({ state });
 mountReveals({ reducedMotion });
 

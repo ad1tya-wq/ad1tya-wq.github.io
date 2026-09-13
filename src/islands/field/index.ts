@@ -1,12 +1,13 @@
 import { attribute, createFbo, createProgram, uniforms } from './gl';
 import { computeAnchor, particleCount, textRectOf } from './layout';
-import { damp, holeRadiusPx } from './lifecycle';
+import { damp, holeRadiusPx, lerp, smoothstep } from './lifecycle';
 import { generateParticles } from './particles';
 import type { FieldState } from './state';
 import { showPoster } from './fallback';
 import pointsVert from './shaders/points.vert.glsl?raw';
 import pointsFrag from './shaders/points.frag.glsl?raw';
 import compositeFrag from './shaders/composite.frag.glsl?raw';
+import probeVert from './shaders/probe.vert.glsl?raw';
 
 const FULLSCREEN_VERT = `#version 300 es
 void main() {
@@ -52,6 +53,12 @@ export function createField(canvas: HTMLCanvasElement, { state, projectCount }: 
   const compProg = createProgram(gl, FULLSCREEN_VERT, compositeFrag);
   const pu = uniforms(gl, pointsProg, POINT_UNIFORMS);
   const cu = uniforms(gl, compProg, COMPOSITE_UNIFORMS);
+  const probeProg = createProgram(gl, probeVert, pointsFrag);
+  const qu = uniforms(gl, probeProg, ['uResolution', 'uDpr'] as const);
+  const probeVao = gl.createVertexArray()!;
+  gl.bindVertexArray(probeVao);
+  const probeBuf = attribute(gl, probeProg, 'aPos', new Float32Array(2 * 1200), 2, gl.DYNAMIC_DRAW);
+  gl.bindVertexArray(null);
 
   // ---- geometry ----
   const vao = gl.createVertexArray()!;
@@ -100,6 +107,8 @@ export function createField(canvas: HTMLCanvasElement, { state, projectCount }: 
   function render(now: number) {
     const time = state.reducedMotion ? 0 : (now - t0) / 1000;
     state.textRect = textRectOf(column);
+    // on desktop the object drifts from 62vw to the centre as the hole forms, so Horizon and Contact sit on it
+    const centred = vw >= 768 ? lerp(anchor.x, vw * 0.5, smoothstep(0.8, 0.86, state.progress)) : anchor.x;
 
     // pass 1: points -> fbo (additive)
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo.fb);
@@ -114,7 +123,7 @@ export function createField(canvas: HTMLCanvasElement, { state, projectCount }: 
     gl.uniform1f(pu.uDpr, dpr);
     gl.uniform1f(pu.uProgress, state.progress);
     gl.uniform1f(pu.uTime, time);
-    gl.uniform2f(pu.uAnchor, anchor.x, anchor.y);
+    gl.uniform2f(pu.uAnchor, centred, anchor.y);
     gl.uniform1f(pu.uRadius, anchor.r);
     gl.uniform4f(pu.uNameBox, nameBox[0], nameBox[1] - window.scrollY, nameBox[2], nameBox[3]);
     gl.uniform1f(pu.uNameMix, state.nameMix);
@@ -125,6 +134,15 @@ export function createField(canvas: HTMLCanvasElement, { state, projectCount }: 
     gl.uniform1f(pu.uDiskScale, anchor.r * 0.16);
     gl.uniform1f(pu.uGain, gain);
     gl.drawArrays(gl.POINTS, 0, particles.count);
+    if (probe && probe.length >= 2) {
+      gl.useProgram(probeProg);
+      gl.bindVertexArray(probeVao);
+      gl.bindBuffer(gl.ARRAY_BUFFER, probeBuf);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, probe.subarray(0, Math.min(probe.length, 2400)));
+      gl.uniform2f(qu.uResolution, vw, vh);
+      gl.uniform1f(qu.uDpr, dpr);
+      gl.drawArrays(gl.POINTS, 0, Math.min(probe.length, 2400) / 2);
+    }
     gl.disable(gl.BLEND);
 
     // pass 2: composite -> screen
@@ -137,7 +155,7 @@ export function createField(canvas: HTMLCanvasElement, { state, projectCount }: 
     gl.uniform1i(cu.uScene, 0);
     gl.uniform2f(cu.uResolution, vw, vh);
     gl.uniform1f(cu.uDpr, dpr);
-    gl.uniform2f(cu.uHole, anchor.x, anchor.y);
+    gl.uniform2f(cu.uHole, centred, anchor.y);
     gl.uniform1f(cu.uRsPx, holeRadiusPx(state.progress, anchor.r));
     gl.uniform4f(cu.uTextRect, state.textRect[0], state.textRect[1], state.textRect[2], state.textRect[3]);
     gl.uniform1f(cu.uExposure, 0.9);
@@ -154,7 +172,7 @@ export function createField(canvas: HTMLCanvasElement, { state, projectCount }: 
     if (document.hidden) return;
 
     state.progress = state.reducedMotion ? state.target : damp(state.progress, state.target, 8, dt);
-    const moving = Math.abs(state.target - state.progress) > 1e-4 || state.force !== 0 || state.hover >= 0 || state.nameMix > 0 && state.nameMix < 1;
+    const moving = Math.abs(state.target - state.progress) > 1e-4 || state.force !== 0 || state.hover >= 0 || state.nameMix > 0 && state.nameMix < 1 || probe !== null;
     if (moving) idleSince = now;
 
     // adaptive resolution: three slow frames in a row while moving -> step the DPR down
