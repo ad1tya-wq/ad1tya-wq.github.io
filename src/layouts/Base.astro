@@ -27,5 +27,8 @@ const { title, description } = Astro.props;
     <main id="main">
       <slot />
     </main>
+    <script>
+      import '../islands/boot';
+    </script>
   </body>
 </html>
