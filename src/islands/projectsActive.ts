@@ -56,7 +56,6 @@ export function mountProjectsActive({ state, field }: { state: FieldState; field
     set('[data-readout-name]', name);
     set('[data-readout-stack]', row.dataset.stack ?? '');
     set('[data-readout-year]', row.dataset.year ?? '');
-    set('[data-readout-detail]', row.querySelector('[data-detail]')?.textContent ?? '');
     const yearRow = readout.querySelector<HTMLElement>('[data-readout-year-row]');
     if (yearRow) yearRow.hidden = !row.dataset.year;
   };

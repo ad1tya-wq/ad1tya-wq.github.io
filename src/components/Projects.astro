@@ -33,7 +33,7 @@ const first = projects[0]!;
     </ul>
   </div>
 
-  <!-- desktop only: the active project's ejecta forms its pictogram in the slot; the readout repeats row facts in mono -->
+  <!-- desktop only: the active project's ejecta forms its pictogram in the slot; the readout repeats row facts in mono (the full description stays in the row) -->
   <aside class="readout" aria-hidden="true" data-readout>
     <div class="readout__slot" data-picto-slot></div>
     <dl class="readout__facts mono">
@@ -42,7 +42,6 @@ const first = projects[0]!;
       <div class="readout__fact"><dt>stack</dt><dd data-readout-stack>{first.data.stack.slice(0, 2).join(' / ')}</dd></div>
       <div class="readout__fact" data-readout-year-row hidden={!first.data.year}><dt>year</dt><dd data-readout-year>{first.data.year ?? ''}</dd></div>
     </dl>
-    <p class="readout__detail" data-readout-detail>{first.data.detail}</p>
   </aside>
 </section>
 
@@ -87,9 +86,6 @@ const first = projects[0]!;
       column-gap: var(--s-6);
     }
     #projects > .col { width: 100%; } /* the grid track, not the global 46 %, sets the column here */
-    /* on desktop the deeper explanation is shown in the readout (aria-hidden), so keep the row's copy for assistive tech only */
-    .row { position: relative; }
-    .row__detail { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
     .readout {
       display: block;
       position: sticky;
@@ -99,9 +95,6 @@ const first = projects[0]!;
       justify-self: center;
       width: min(100%, 400px);
     }
-    .readout__detail { margin-top: var(--s-3); color: var(--silver); font-size: 0.9375rem; line-height: 1.55; }
-    .readout__detail { transition: opacity 160ms var(--ease-out), translate 160ms var(--ease-out); }
-    .readout.is-switching .readout__detail { opacity: 0; translate: 0 -3px; }
     .readout__slot { width: 220px; height: 220px; margin-inline: auto; }
     .readout__facts { display: grid; gap: var(--s-1); margin-top: var(--s-3); font-size: var(--fs-mono-sm); color: var(--fog); }
     .readout__fact { display: grid; grid-template-columns: 6ch 1fr; gap: var(--s-2); }

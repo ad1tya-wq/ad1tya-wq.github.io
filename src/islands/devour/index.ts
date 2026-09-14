@@ -226,7 +226,10 @@ export function mountDevour({ state, field, reducedMotion }: { state: FieldState
       return;
     }
     if (usesParticles && b.body) {
-      b.body.reverse(); // still on its way in: turn around
+      // still on its way in, or its dust was recycled into the disk (pool eviction): the body flies home from where it is
+      b.el.classList.remove('is-eaten');
+      b.pts = null;
+      b.body.reverse();
       return;
     }
     // fade back in: visible first (still transparent), then let the transition run
