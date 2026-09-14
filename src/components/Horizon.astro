@@ -16,10 +16,12 @@
       </label>
       <input class="mass__slider" id="mass" type="range" min="0" max="100" step="1" value="0" autocomplete="off" aria-valuetext="1.0 solar masses" data-mass />
       <p class="mass__hint mono" aria-live="polite" data-mass-status>More mass, more reach.</p>
-        <button type="button" class="btn btn--primary mass__reset" data-mass-reset hidden>Reset the universe?</button>
       </div>
     </div>
   </div>
+  <!-- at full mass the page goes dark and only this remains, floating at the centre of the screen -->
+  <div class="void" aria-hidden="true"></div>
+  <button type="button" class="btn btn--primary void__reset" data-mass-reset hidden>Reset the universe?</button>
 </section>
 
 <style>
@@ -76,8 +78,36 @@
   .mass__slider:active::-webkit-slider-thumb { transform: scale(1.15); }
   .mass__slider:focus-visible { outline: 2px solid var(--core); outline-offset: 4px; border-radius: 2px; }
   .mass__hint { min-height: 1.5em; margin-top: var(--s-1); font-size: var(--fs-mono-sm); color: var(--fog); }
-  .mass__reset { margin-top: var(--s-3); }
-  .mass__reset[hidden] { display: none; }
+  /* the void: pure black over everything, fading in after the last block has gone */
+  .void {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1400ms var(--ease-out);
+  }
+  :global(body.is-void) .void { opacity: 1; pointer-events: auto; }
+  .void__reset {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    z-index: 61;
+    translate: -50% -50%;
+    opacity: 0;
+    animation: void-float 6s ease-in-out infinite;
+    transition: opacity 900ms 900ms var(--ease-out);
+  }
+  .void__reset[hidden] { display: none; }
+  :global(body.is-void) .void__reset { opacity: 1; }
+  @keyframes void-float {
+    0%, 100% { translate: -50% calc(-50% - 6px); }
+    50% { translate: -50% calc(-50% + 6px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .void__reset { animation: none; }
+  }
 
   /* eaten blocks keep their box (no reflow) and lose their ink; the fade only matters for blocks without particles */
   :global(.is-eaten) { visibility: hidden !important; transition: none !important; }

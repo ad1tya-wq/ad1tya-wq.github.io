@@ -153,11 +153,11 @@ void main() {
   float shipW = isShip * wShip;
   px = mix(px, shipPx, shipW);
 
-  // ---- text the hole has eaten: from the glyph, a decaying orbit into the disk; reversed when the mass drops ----
+  // ---- dust of eaten text: from where the (shrunken) block ended, a decaying orbit into the disk; reversed when the mass drops ----
   float hasEat = step(0.0, aEat.z);
   float eatLag = fract(aEat.w);
   float eatOut = step(1.5, aEat.w);
-  float te = clamp((uTime - aEat.z - eatLag * 0.35) / 1.6, 0.0, 1.0);
+  float te = clamp((uTime - aEat.z - eatLag * 0.3) / 1.2, 0.0, 1.0);
   te = mix(te, 1.0 - te, eatOut);
   vec2 glyph = vec2(aEat.x, aEat.y - uScroll);
   vec2 rel = glyph - uAnchor;
@@ -199,7 +199,8 @@ void main() {
   b = mix(b, 1.5, pictoW);
   float bShip = mix(1.1, 0.9 * (1.0 - aShip.z) * flicker, step(0.001, aShip.z));
   b = mix(b, bShip, shipW);
-  b = mix(b, 1.6 + 0.9 * sin(3.14159 * te) * (1.0 - ss(0.75, 1.0, te)) + (0.9 * (3.0 / aDisk.x) + 0.15) * ss(0.75, 1.0, te), hasEat);
+  // dust burns brighter and larger than the disk it falls through, then settles to disk brightness
+  b = mix(b, (2.6 - 1.2 * te) * (1.0 - ss(0.75, 1.0, te)) + (0.9 * (3.0 / aDisk.x) + 0.15) * ss(0.75, 1.0, te), hasEat);
 
   // name particles stay invisible until assembly starts (the real h1 carries the name until then)
   float invisibleName = hasName * (1.0 - wStar) * (1.0 - step(0.001, uNameMix));
@@ -212,7 +213,7 @@ void main() {
   size = mix(size, 1.6, faceW);
   size = mix(size, 1.7, pictoW);
   size = mix(size, 1.7 - 0.5 * aShip.z, shipW);
-  size = mix(size, 1.6, hasEat);
+  size = mix(size, mix(2.6, 1.6, ss(0.5, 1.0, te)), hasEat);
 
   vec2 clip = (px / uResolution) * 2.0 - 1.0;
   clip.y = -clip.y;
