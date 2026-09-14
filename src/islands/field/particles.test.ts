@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { generateParticles, mulberry32, valueNoise3 } from './particles';
+import { generateParticles, mulberry32, valueNoise3, ORBIT_BEAD_POINTS, ORBIT_COUNT, ORBIT_RINGS, SHIP_COUNT } from './particles';
 
 describe('mulberry32', () => {
   it('is deterministic and in [0, 1)', () => {
@@ -114,5 +114,22 @@ describe('spacecraft particles', () => {
     expect(inShip(-0.4, 0.15)).toBe(true);
     expect(inShip(-0.48, 0.0)).toBe(false);
     expect(inShip(0.6, 0)).toBe(false);
+  });
+});
+
+describe('orbit marks', () => {
+  it('reserves one ring of points per timeline slot after the ship, with a bead in each', () => {
+    const p = generateParticles(20000, 7);
+    let onRing = 0;
+    const beads = new Array(ORBIT_RINGS).fill(0);
+    for (let i = 0; i < p.count; i++) {
+      const ring = p.orbit[3 * i]!;
+      if (ring < 0) continue;
+      onRing++;
+      expect(i).toBeGreaterThanOrEqual(SHIP_COUNT);
+      if (p.orbit[3 * i + 2] === 1) beads[ring]!++;
+    }
+    expect(onRing).toBe(ORBIT_COUNT);
+    beads.forEach((n) => expect(n).toBe(ORBIT_BEAD_POINTS));
   });
 });

@@ -7,6 +7,8 @@ export interface Entry {
   link?: { href: string; label: string };
   /** a figure that belongs to the entry (a grade): shown on the right, labelled */
   score?: { label: string; value: string };
+  /** ring this entry lights in the field (0 = innermost, most recent) */
+  orbit?: number;
 }
 interface Props {
   entries: Entry[];
@@ -19,7 +21,7 @@ const { entries } = Astro.props;
   </svg>
   <ul class="entries">
     {entries.map((e) => (
-      <li class:list={['entry', { 'entry--scored': !!e.score }]} data-reveal>
+      <li class:list={['entry', { 'entry--scored': !!e.score }]} data-reveal data-orbit={e.orbit}>
         <p class="entry__dates mono">{e.dates}</p>
         <p class="entry__title">{e.title}</p>
         {e.score && (
