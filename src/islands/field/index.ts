@@ -50,7 +50,7 @@ export interface FieldOptions {
   projectCount: number;
 }
 
-const POINT_UNIFORMS = ['uResolution', 'uDpr', 'uProgress', 'uTime', 'uAnchor', 'uRadius', 'uNameBox', 'uNameMix', 'uFaceBox', 'uFaceMix', 'uWave', 'uActiveFragment', 'uPictoBox', 'uPictoMix', 'uPointer', 'uPointerForce', 'uHover', 'uHoverY', 'uDiskScale', 'uGain', 'uMass', 'uScroll', 'uEatenNameFace', 'uOrbitActive', 'uOrbitGlow'] as const;
+const POINT_UNIFORMS = ['uResolution', 'uDpr', 'uProgress', 'uTime', 'uAnchor', 'uRadius', 'uNameBox', 'uNameMix', 'uFaceBox', 'uFaceMix', 'uWave', 'uActiveFragment', 'uPictoBox', 'uPictoMix', 'uPointer', 'uPointerForce', 'uHover', 'uHoverY', 'uDiskScale', 'uGain', 'uMass', 'uScroll', 'uEatenNameFace', 'uOrbitActive', 'uOrbitGlow', 'uOrbitBorn', 'uOrbitFrom'] as const;
 const COMPOSITE_UNIFORMS = ['uScene', 'uResolution', 'uDpr', 'uHole', 'uRsPx', 'uTextRect', 'uExposure'] as const;
 
 /** Creates the field and rebuilds it transparently if the WebGL context is lost and later restored. */
@@ -372,6 +372,8 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
     gl.uniform2f(pu.uEatenNameFace, state.nameEaten, state.faceEaten);
     gl.uniform1f(pu.uOrbitActive, state.orbitActive);
     gl.uniform1f(pu.uOrbitGlow, state.orbitGlow);
+    gl.uniform1fv(pu.uOrbitBorn, state.orbitBorn);
+    gl.uniform2fv(pu.uOrbitFrom, state.orbitFrom);
     if (particles) gl.drawArrays(gl.POINTS, 0, particles.count);
     if (probe && probe.length >= 2 && probeBuf) {
       gl.useProgram(probeProg);

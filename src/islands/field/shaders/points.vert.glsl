@@ -38,6 +38,8 @@ uniform float uScroll;      // window.scrollY, css px (document -> viewport for 
 uniform vec2 uEatenNameFace;// 1 when the hole has eaten the hero name / the portrait
 uniform float uOrbitActive; // lit ring in Experience, or -1
 uniform float uOrbitGlow;   // pulse when the lit ring changes
+uniform float uOrbitBorn[5];// birth time per ring, -1 = not formed
+uniform vec2 uOrbitFrom[5]; // launch point per ring (the entry's date tick), document css px
 
 out float vBright;
 
@@ -132,14 +134,28 @@ void main() {
   float isHover = step(0.5, 1.0 - abs(aFragment - uHover)) * step(0.0, uHover) * wEject * (1.0 - wRem);
   px = mix(px, vec2(uAnchor.x, uHoverY), 0.15 * isHover);
 
-  // ---- orbit marks (Experience): one ring per timeline entry, older ones farther out, each with a slowly orbiting bead ----
+  // ---- orbit marks (Experience): one ring per timeline entry, older ones farther out, each with a slowly orbiting bead.
+  // A ring does not exist until its entry is read: then its matter leaves the entry's date tick, arcs to the object and
+  // is wound around the orbit behind the bead. ----
   float isOrbit = step(0.0, aOrbit.x);
-  float wOrbit = isOrbit * ss(0.66, 0.70, p) * (1.0 - ss(0.815, 0.85, p));
+  int ringIdx = int(aOrbit.x + 0.5);
+  float born = isOrbit > 0.5 ? uOrbitBorn[ringIdx] : -1.0;
+  float formed = step(0.0, born);
+  float wOrbit = isOrbit * formed * ss(0.66, 0.70, p) * (1.0 - ss(0.815, 0.85, p));
   float ringR = 1.15 + 0.42 * aOrbit.x;                          // in units of R
   float omegaO = 0.32 * pow(ringR, -1.5);                        // Keplerian: inner beads move faster
   float angO = aOrbit.y + uTime * omegaO;
   vec2 orbitPx = uAnchor + vec2(cos(angO), sin(angO) * 0.42) * ringR * uRadius;
-  px = mix(px, orbitPx, wOrbit);
+  // launch: the bead leads, ring points follow in order of their angle behind it (delay up to 0.9 s), each on an arc
+  float beadA = 0.6 + aOrbit.x * 1.35;
+  float behind = mod(beadA - aOrbit.y + 6.2831853, 6.2831853) / 6.2831853;
+  float tBorn = clamp((uTime - born - behind * 0.9 * (1.0 - aOrbit.z)) / 1.1, 0.0, 1.0);
+  float sBorn = tBorn * tBorn * (3.0 - 2.0 * tBorn);
+  vec2 fromPx = (isOrbit > 0.5 ? uOrbitFrom[ringIdx] : vec2(0.0)) - vec2(0.0, uScroll);
+  vec2 ctrl = mix(fromPx, orbitPx, 0.45) + vec2(0.0, -0.35 * uRadius * ringR);
+  vec2 arc = mix(mix(fromPx, ctrl, sBorn), mix(ctrl, orbitPx, sBorn), sBorn);
+  px = mix(px, mix(arc, orbitPx, step(1.0, tBorn)), wOrbit);
+  float inFlight = (1.0 - step(1.0, tBorn)) * wOrbit;
   float orbitLit = step(0.5, 1.0 - abs(aOrbit.x - uOrbitActive));
 
   // ---- the active project's ejecta cluster gathers into its pictogram beside the rows ----
@@ -211,7 +227,7 @@ void main() {
   b *= mix(1.0, 2.0, isHover);
   b = mix(b, 1.5, pictoW);
   float bOrbit = mix(mix(0.55, 1.4, orbitLit), mix(1.0, 2.6, orbitLit), aOrbit.z) * (1.0 + 0.6 * uOrbitGlow * orbitLit);
-  b = mix(b, bOrbit, wOrbit);
+  b = mix(b, mix(bOrbit, 2.4, inFlight), wOrbit);
   float bShip = mix(1.1, 0.9 * (1.0 - aShip.z) * flicker, step(0.001, aShip.z));
   b = mix(b, bShip, shipW);
   // dust burns brighter and larger than the disk it falls through, then settles to disk brightness
@@ -227,7 +243,7 @@ void main() {
   float size = 1.4 + 1.2 * wBreak * (1.0 - ss(0.20, 0.26, p)) + 0.5 * wEject * (1.0 - wFall) + 0.6 * falls * wHole;
   size = mix(size, 1.6, faceW);
   size = mix(size, 1.7, pictoW);
-  size = mix(size, mix(1.5, 2.6, aOrbit.z), wOrbit);
+  size = mix(size, mix(mix(1.5, 2.6, aOrbit.z), 2.2, inFlight), wOrbit);
   size = mix(size, 1.7 - 0.5 * aShip.z, shipW);
   size = mix(size, mix(2.6, 1.6, ss(0.5, 1.0, te)), hasEat);
 

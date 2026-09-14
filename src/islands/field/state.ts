@@ -28,6 +28,10 @@ export interface FieldState {
   orbitActive: number;
   /** short pulse when the lit ring changes, 1 -> 0 */
   orbitGlow: number;
+  /** shader-clock birth time per ring (-1 = not formed yet): rings are thrown into orbit the first time their entry is read */
+  orbitBorn: Float32Array;
+  /** where each ring was thrown from: the entry's date tick, document css px pairs */
+  orbitFrom: Float32Array;
   /** project whose ejecta cluster currently forms its pictogram, or -1 */
   activeFragment: number;
   /** pictogram assembly 0..1 (tweened when the active project changes) */
@@ -56,6 +60,8 @@ export function createState(reducedMotion: boolean): FieldState {
     faceEaten: 0,
     orbitActive: -1,
     orbitGlow: 0,
+    orbitBorn: new Float32Array(5).fill(-1),
+    orbitFrom: new Float32Array(10),
     activeFragment: -1,
     pictoMix: 0,
     reducedMotion,

@@ -32,7 +32,7 @@ export function mountBehaviours({ state, field, reducedMotion }: { state: FieldS
   mountProjectsActive({ state, field });
   mountReveals({ reducedMotion });
   mountDevour({ state, field, reducedMotion });
-  mountOrbits({ state });
+  mountOrbits({ state, field });
 
   // ScrollTrigger measures once fonts and images are in
   document.fonts.ready.then(() => scroll.refresh());
