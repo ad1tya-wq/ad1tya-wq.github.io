@@ -1,6 +1,6 @@
 export const site = {
   name: 'Aditya Sahu',
-  title: 'machine learning and application security',
+  title: 'machine learning and agentic AI systems',
   line: 'Final-year CS undergrad working where machine learning meets application security: vulnerability triage pipelines and agentic RAG systems.',
   email: 'sahu200431@gmail.com',
   github: 'https://github.com/ad1tya-wq',
