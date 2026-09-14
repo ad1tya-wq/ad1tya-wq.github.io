@@ -26,12 +26,12 @@ your name, a star, core collapse, shock breakout, ejecta, remnant (with a spacec
 3. `src/content/projects/*.md`: reorder, drop, or tighten summaries (140 characters max).
 4. `src/content/experience/*.md`: one file per role; `src/content/education/*.md`: one file per degree (score = label + value).
 5. `src/content/skills.json`: bands of technical skills (technical bands plus a Soft skills band).
-5b. `src/content/certificates.json`: title, issuer, id and verify URL (the seal art is generated from the id).
+5b. `src/content/certificates.json`: title, issuer, id, and verify URL (the seal art is generated from the id).
 5c. Each project carries `icon` (a Phosphor regular icon name from `src/lib/picto.ts`) and an optional `year`; the icon becomes the particle pictogram beside the row on desktop.
 6. `src/assets/portrait.jpg` (square-ish, good contrast), then `npm run dither`.
 7. `public/resume.pdf`.
 
-Pushes to `main` deploy to GitHub Pages via `.github/workflows/deploy.yml` (tests, build and the JS budget gate run first).
+Pushes to `main` deploy to GitHub Pages via `.github/workflows/deploy.yml` (tests, build, and the JS budget gate run first).
 For a custom domain later: add a `CNAME` file to `public/` and point DNS at GitHub Pages.
 
 ## Quality bar (measured on the production build)
