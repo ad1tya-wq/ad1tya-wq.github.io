@@ -47,3 +47,8 @@ export function chapterAt(progress: number): ChapterId {
 export function holeRadiusPx(progress: number, starRadiusPx: number): number {
   return starRadiusPx * 0.16 * smoothstep(0.82, 0.9, progress);
 }
+
+/** Visual and gravitational scale of the hole for a mass slider value 0..1: 1x at rest, 2.5x at full mass. */
+export function massScale(mass: number): number {
+  return 1 + 1.5 * clamp01(mass);
+}

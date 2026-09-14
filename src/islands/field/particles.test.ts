@@ -35,8 +35,8 @@ describe('generateParticles', () => {
     expect(p.ejecta.length).toBe(4 * n);
     expect(p.disk.length).toBe(4 * n);
     expect(p.fragment.length).toBe(n);
-    expect(p.nameSlots).toBe(Math.round(0.42 * n));
-    expect(p.faceSlots).toBe(Math.round(0.38 * n));
+    expect(p.nameSlots).toBe(Math.round(0.35 * n));
+    expect(p.faceSlots).toBe(Math.round(0.32 * n));
     expect(p.nameSlots + p.faceSlots).toBeLessThan(n);
   });
 

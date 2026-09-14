@@ -1,3 +1,5 @@
+import { SLOTS } from './layout';
+
 export function mulberry32(seed: number): () => number {
   let a = seed >>> 0;
   return () => {
@@ -68,8 +70,8 @@ export function generateParticles(count: number, projectCount: number, seed = 13
     disk: new Float32Array(4 * count),
     fragment: new Float32Array(count),
     ship: new Float32Array(3 * count).fill(-1),
-    nameSlots: Math.round(0.42 * count),
-    faceSlots: Math.round(0.38 * count),
+    nameSlots: Math.round(SLOTS.name * count),
+    faceSlots: Math.round(SLOTS.face * count),
   };
 
   // spacecraft: hull points by rejection sampling, exhaust points trailing behind the nozzle
