@@ -50,7 +50,7 @@ export interface FieldOptions {
   projectCount: number;
 }
 
-const POINT_UNIFORMS = ['uResolution', 'uDpr', 'uProgress', 'uTime', 'uAnchor', 'uRadius', 'uNameBox', 'uNameMix', 'uFaceBox', 'uFaceMix', 'uWave', 'uActiveFragment', 'uPictoBox', 'uPictoMix', 'uPointer', 'uPointerForce', 'uHover', 'uHoverY', 'uDiskScale', 'uGain', 'uMass', 'uScroll', 'uEatenNameFace'] as const;
+const POINT_UNIFORMS = ['uResolution', 'uDpr', 'uProgress', 'uTime', 'uAnchor', 'uRadius', 'uNameBox', 'uNameMix', 'uFaceBox', 'uFaceMix', 'uWave', 'uActiveFragment', 'uPictoBox', 'uPictoMix', 'uPointer', 'uPointerForce', 'uHover', 'uHoverY', 'uDiskScale', 'uGain', 'uMass', 'uScroll', 'uEatenNameFace', 'uOrbitActive', 'uOrbitGlow'] as const;
 const COMPOSITE_UNIFORMS = ['uScene', 'uResolution', 'uDpr', 'uHole', 'uRsPx', 'uTextRect', 'uExposure'] as const;
 
 /** Creates the field and rebuilds it transparently if the WebGL context is lost and later restored. */
@@ -258,6 +258,7 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
     attribute(gl, pointsProg, 'aDisk', p.disk, 4);
     attribute(gl, pointsProg, 'aFragment', p.fragment, 1);
     attribute(gl, pointsProg, 'aShip', p.ship, 3);
+    attribute(gl, pointsProg, 'aOrbit', p.orbit, 3);
     nameBuf = attribute(gl, pointsProg, 'aName', nameData, 2, gl.DYNAMIC_DRAW);
     faceBuf = attribute(gl, pointsProg, 'aFace', faceData, 2, gl.DYNAMIC_DRAW);
     pictoBuf = attribute(gl, pointsProg, 'aPicto', pictoData, 2, gl.DYNAMIC_DRAW);
@@ -369,6 +370,8 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
     gl.uniform1f(pu.uMass, state.mass);
     gl.uniform1f(pu.uScroll, window.scrollY);
     gl.uniform2f(pu.uEatenNameFace, state.nameEaten, state.faceEaten);
+    gl.uniform1f(pu.uOrbitActive, state.orbitActive);
+    gl.uniform1f(pu.uOrbitGlow, state.orbitGlow);
     if (particles) gl.drawArrays(gl.POINTS, 0, particles.count);
     if (probe && probe.length >= 2 && probeBuf) {
       gl.useProgram(probeProg);
@@ -420,7 +423,7 @@ function createRenderer(canvas: HTMLCanvasElement, { state, projectCount }: Fiel
     }
 
     state.progress = state.reducedMotion ? state.target : damp(state.progress, state.target, 8, dt);
-    const moving = Math.abs(state.target - state.progress) > 1e-4 || state.force !== 0 || state.hover >= 0 || (state.pictoMix > 0 && state.pictoMix < 1) || (state.nameMix > 0 && state.nameMix < 1) || probe !== null;
+    const moving = Math.abs(state.target - state.progress) > 1e-4 || state.force !== 0 || state.hover >= 0 || state.orbitGlow > 0 || (state.pictoMix > 0 && state.pictoMix < 1) || (state.nameMix > 0 && state.nameMix < 1) || probe !== null;
     if (moving) idleSince = now;
 
     // adaptive resolution: three slow frames in a row while moving -> step the DPR down

@@ -40,6 +40,8 @@ export interface ParticleBuffers {
   fragment: Float32Array;
   /** xyz per particle: ship-local x (along heading), y (across), z = 0 hull, (0,1] exhaust age, -1 not part of the ship */
   ship: Float32Array;
+  /** xyz per particle: orbit ring index (0 = innermost), base angle, 1 = part of the ring's bead; x = -1 when not on a ring */
+  orbit: Float32Array;
   /** the first nameSlots particles may carry name points; the next faceSlots carry portrait points */
   nameSlots: number;
   faceSlots: number;
@@ -49,6 +51,15 @@ export interface ParticleBuffers {
 export const SHIP_HULL = 360;
 export const SHIP_EXHAUST = 240;
 export const SHIP_COUNT = SHIP_HULL + SHIP_EXHAUST;
+
+/** Orbit marks for the Experience chapter: one ring per timeline entry, each with a bead. They follow the ship in the buffer. */
+export const ORBIT_RINGS = 5;
+export const ORBIT_RING_POINTS = 440;
+export const ORBIT_BEAD_POINTS = 60;
+export const ORBIT_PER_RING = ORBIT_RING_POINTS + ORBIT_BEAD_POINTS;
+export const ORBIT_COUNT = ORBIT_RINGS * ORBIT_PER_RING;
+/** Where each ring's bead sits at time zero (radians), spread so no two beads line up. */
+export const beadAngle = (ring: number): number => 0.6 + ring * 1.35;
 
 /** Delta-wing dart in local coordinates: nose at x = 0.5, tail at x = -0.5, half-height 0.22. */
 export function inShip(x: number, y: number): boolean {
@@ -70,6 +81,7 @@ export function generateParticles(count: number, projectCount: number, seed = 13
     disk: new Float32Array(4 * count),
     fragment: new Float32Array(count),
     ship: new Float32Array(3 * count).fill(-1),
+    orbit: new Float32Array(3 * count).fill(-1),
     nameSlots: Math.round(SLOTS.name * count),
     faceSlots: Math.round(SLOTS.face * count),
   };
@@ -94,6 +106,20 @@ export function generateParticles(count: number, projectCount: number, seed = 13
     }
   }
   const TAU = Math.PI * 2;
+
+  // orbit marks: evenly spaced ring points plus a tight bead cluster per ring
+  const orbitStart = shipCount;
+  const orbitEnd = Math.min(orbitStart + ORBIT_COUNT, count);
+  for (let i = orbitStart; i < orbitEnd; i++) {
+    const k = i - orbitStart;
+    const ring = Math.floor(k / ORBIT_PER_RING);
+    const j = k % ORBIT_PER_RING;
+    const bead = j < ORBIT_BEAD_POINTS;
+    const gauss = rnd() + rnd() + rnd() - 1.5; // roughly normal in [-1.5, 1.5]
+    out.orbit[3 * i] = ring;
+    out.orbit[3 * i + 1] = bead ? beadAngle(ring) + gauss * 0.035 : ((j - ORBIT_BEAD_POINTS) / ORBIT_RING_POINTS) * TAU + (rnd() - 0.5) * 0.01;
+    out.orbit[3 * i + 2] = bead ? 1 : 0;
+  }
 
   for (let i = 0; i < count; i++) {
     for (let k = 0; k < 4; k++) out.seed[4 * i + k] = rnd();

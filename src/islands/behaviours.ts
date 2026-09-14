@@ -8,6 +8,7 @@ import { mountHero } from './hero';
 import { mountPointer } from './pointer';
 import { mountToy } from './toy';
 import { mountDevour } from './devour';
+import { mountOrbits } from './orbits';
 
 /**
  * Everything that needs GSAP: scroll mapping, nav, hero assembly, pointer, toy, project pictograms, reveals.
@@ -31,6 +32,7 @@ export function mountBehaviours({ state, field, reducedMotion }: { state: FieldS
   mountProjectsActive({ state, field });
   mountReveals({ reducedMotion });
   mountDevour({ state, field, reducedMotion });
+  mountOrbits({ state });
 
   // ScrollTrigger measures once fonts and images are in
   document.fonts.ready.then(() => scroll.refresh());

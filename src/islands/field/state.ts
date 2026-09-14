@@ -24,6 +24,10 @@ export interface FieldState {
   /** 1 while the hole has eaten the hero name / portrait: their resting particles are hidden */
   nameEaten: number;
   faceEaten: number;
+  /** timeline entry whose orbit ring is lit in Experience, or -1 */
+  orbitActive: number;
+  /** short pulse when the lit ring changes, 1 -> 0 */
+  orbitGlow: number;
   /** project whose ejecta cluster currently forms its pictogram, or -1 */
   activeFragment: number;
   /** pictogram assembly 0..1 (tweened when the active project changes) */
@@ -50,6 +54,8 @@ export function createState(reducedMotion: boolean): FieldState {
     mass: 0,
     nameEaten: 0,
     faceEaten: 0,
+    orbitActive: -1,
+    orbitGlow: 0,
     activeFragment: -1,
     pictoMix: 0,
     reducedMotion,

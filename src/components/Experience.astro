@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Timeline, { type Entry } from './Timeline.astro';
+import { orbitIndices } from '../lib/chronology';
 
 const experience: Entry[] = (await getCollection('experience'))
   .sort((a, b) => a.data.order - b.data.order)
@@ -19,6 +20,10 @@ const education: Entry[] = (await getCollection('education'))
     summary: e.data.institution,
     score: e.data.score,
   }));
+
+// one ring per entry across both timelines: the most recent start sits innermost
+const rings = orbitIndices([...experience, ...education].map((e) => e.dates));
+[...experience, ...education].forEach((e, i) => (e.orbit = rings[i]));
 ---
 <!-- one chapter, two timelines: the field's fallback phase runs across both -->
 <section id="experience" class="section" data-chapter="experience" aria-labelledby="experience-h">

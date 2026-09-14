@@ -10,6 +10,7 @@ in float aFragment; // project index
 in vec2 aFace;      // 0..1 inside the portrait box, or (-1,-1) when unassigned
 in vec3 aShip;      // ship-local x, y; z = 0 hull, (0,1] exhaust age, -1 not on the ship
 in vec2 aPicto;     // 0..1 inside the pictogram box for the particle's project, or (-1,-1)
+in vec3 aOrbit;     // orbit ring index (or -1), base angle, 1 = bead
 in vec4 aEat;       // eaten text: document css px, start time (-1 = free), lag 0..1 (+2 when flying back out)
 
 uniform vec2 uResolution;   // css px
@@ -35,6 +36,8 @@ uniform float uGain;
 uniform float uMass;        // Horizon mass slider 0..1
 uniform float uScroll;      // window.scrollY, css px (document -> viewport for eaten text)
 uniform vec2 uEatenNameFace;// 1 when the hole has eaten the hero name / the portrait
+uniform float uOrbitActive; // lit ring in Experience, or -1
+uniform float uOrbitGlow;   // pulse when the lit ring changes
 
 out float vBright;
 
@@ -129,6 +132,16 @@ void main() {
   float isHover = step(0.5, 1.0 - abs(aFragment - uHover)) * step(0.0, uHover) * wEject * (1.0 - wRem);
   px = mix(px, vec2(uAnchor.x, uHoverY), 0.15 * isHover);
 
+  // ---- orbit marks (Experience): one ring per timeline entry, older ones farther out, each with a slowly orbiting bead ----
+  float isOrbit = step(0.0, aOrbit.x);
+  float wOrbit = isOrbit * ss(0.66, 0.70, p) * (1.0 - ss(0.815, 0.85, p));
+  float ringR = 1.15 + 0.42 * aOrbit.x;                          // in units of R
+  float omegaO = 0.32 * pow(ringR, -1.5);                        // Keplerian: inner beads move faster
+  float angO = aOrbit.y + uTime * omegaO;
+  vec2 orbitPx = uAnchor + vec2(cos(angO), sin(angO) * 0.42) * ringR * uRadius;
+  px = mix(px, orbitPx, wOrbit);
+  float orbitLit = step(0.5, 1.0 - abs(aOrbit.x - uOrbitActive));
+
   // ---- the active project's ejecta cluster gathers into its pictogram beside the rows ----
   float hasPicto = step(0.0, aPicto.x);
   float isActive = step(0.5, 1.0 - abs(aFragment - uActiveFragment)) * step(0.0, uActiveFragment);
@@ -197,6 +210,8 @@ void main() {
   b = mix(b, mix(1.0, 0.12, inside) + 0.8 * front, faceW);
   b *= mix(1.0, 2.0, isHover);
   b = mix(b, 1.5, pictoW);
+  float bOrbit = mix(mix(0.55, 1.4, orbitLit), mix(1.0, 2.6, orbitLit), aOrbit.z) * (1.0 + 0.6 * uOrbitGlow * orbitLit);
+  b = mix(b, bOrbit, wOrbit);
   float bShip = mix(1.1, 0.9 * (1.0 - aShip.z) * flicker, step(0.001, aShip.z));
   b = mix(b, bShip, shipW);
   // dust burns brighter and larger than the disk it falls through, then settles to disk brightness
@@ -212,6 +227,7 @@ void main() {
   float size = 1.4 + 1.2 * wBreak * (1.0 - ss(0.20, 0.26, p)) + 0.5 * wEject * (1.0 - wFall) + 0.6 * falls * wHole;
   size = mix(size, 1.6, faceW);
   size = mix(size, 1.7, pictoW);
+  size = mix(size, mix(1.5, 2.6, aOrbit.z), wOrbit);
   size = mix(size, 1.7 - 0.5 * aShip.z, shipW);
   size = mix(size, mix(2.6, 1.6, ss(0.5, 1.0, te)), hasEat);
 
