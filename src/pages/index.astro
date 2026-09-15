@@ -11,7 +11,7 @@ import Contact from '../components/Contact.astro';
 import DitheredImage from '../components/DitheredImage.astro';
 import { site } from '../content/site';
 ---
-<Base title={`${site.name}, ${site.title}`} description={site.line}>
+<Base title={site.name} description={site.line}>
   <Hero>
     <DitheredImage slot="portrait" base="/portrait" alt={`Portrait of ${site.name}`} />
   </Hero>
